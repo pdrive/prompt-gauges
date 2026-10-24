@@ -48,10 +48,10 @@ The bar is colored by **pace**, not by how full it is. 49% used sounds fine, but
 
 - **projected** = used % ÷ the share of the window gone by;
 - **green** while on pace, **amber** from a projected 100%, **red** from a projected 125%;
-- near the top the used share wins whatever the pace: **amber** from 60% used, **red** from 80%;
+- near the top the used share wins whatever the pace: **amber** from 60% used, **red** from 90%;
 - `↑119%` shows the projection whenever it is 100% or more (on the 7-day window too);
 - the **tick** on the bar marks where the window's clock is: a fill past the tick is ahead of pace;
-- no projection in the first tenth of a window, when it would be noise; only the 80% backstop applies then.
+- no projection in the first tenth of a window, when it would be noise; only the used floors apply then.
 
 The percents come from the last API response; the countdowns tick on their own. It shows only on a subscription with usage limits.
 

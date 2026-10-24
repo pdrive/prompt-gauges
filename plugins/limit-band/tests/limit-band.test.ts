@@ -18,7 +18,8 @@ test('pace: projected use over the share of the window gone', async () => {
   expect(paceHint(at(30, 150), 5 * H, NOW)).toBe('')
   // Well past it, or 80% used whatever the clock
   expect(paceOf(at(70, 150), 5 * H, NOW)).toBe('over')
-  expect(paceOf(at(80, 10), 5 * H, NOW)).toBe('over')
+  expect(paceOf(at(90, 10), 5 * H, NOW)).toBe('over')
+  expect(paceOf(at(89, 10), 5 * H, NOW)).toBe('ahead')
   // Amber from 60% used even behind pace: 60% with 30m left is heading for 67%
   expect(paceOf(at(59, 30), 5 * H, NOW)).toBe('ok')
   expect(paceOf(at(60, 30), 5 * H, NOW)).toBe('ahead')
