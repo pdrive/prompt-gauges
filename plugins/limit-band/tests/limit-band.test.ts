@@ -19,6 +19,9 @@ test('pace: projected use over the share of the window gone', async () => {
   // Well past it, or 80% used whatever the clock
   expect(paceOf(at(70, 150), 5 * H, NOW)).toBe('over')
   expect(paceOf(at(80, 10), 5 * H, NOW)).toBe('over')
+  // Amber from 60% used even behind pace: 60% with 30m left is heading for 67%
+  expect(paceOf(at(59, 30), 5 * H, NOW)).toBe('ok')
+  expect(paceOf(at(60, 30), 5 * H, NOW)).toBe('ahead')
   // Too early to say before a tenth of the window: only the 80% backstop
   expect(projectedOf(at(20, 290), 5 * H, NOW)).toBe(null)
   expect(paceOf(at(20, 290), 5 * H, NOW)).toBe('ok')

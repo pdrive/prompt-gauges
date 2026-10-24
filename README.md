@@ -47,7 +47,8 @@ A thin line above the prompt for the 5-hour usage window, with its percent and t
 The bar is colored by **pace**, not by how full it is. 49% used sounds fine, but if only 41% of the window has gone by, you are on course to hit the limit before it resets. So:
 
 - **projected** = used % ÷ the share of the window gone by;
-- **green** while on pace, **amber** from a projected 100%, **red** from 125% or once 80% is used, whatever the pace;
+- **green** while on pace, **amber** from a projected 100%, **red** from a projected 125%;
+- near the top the used share wins whatever the pace: **amber** from 60% used, **red** from 80%;
 - `↑119%` shows the projection whenever it is 100% or more (on the 7-day window too);
 - the **tick** on the bar marks where the window's clock is: a fill past the tick is ahead of pace;
 - no projection in the first tenth of a window, when it would be noise; only the 80% backstop applies then.

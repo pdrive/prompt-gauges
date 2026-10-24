@@ -6,7 +6,7 @@ import type { Limits, Pace, Window } from '../types'
 // A thin line above the prompt for the 5-hour usage window, with its percent and time to reset, and
 // the 7-day window beside it. The bar is colored by pace, not by how full it is: where the window
 // would end at the rate used so far (used % over the share of the window gone). Green on pace, amber
-// when it would run out before the reset, red well past that or once 80% is used; `↑117%` says where
+// when it would run out before the reset or once 60% is used, red well past that or once 80% is used; `↑117%` says where
 // it is heading, and a tick on the bar stands where the window's clock is.
 // The percents come from the last API response; the countdowns tick here. It sits on the same row
 // as whatever band is drawn beneath it (Cache Maxxer's): that band takes the room left, this sits at the right end.
@@ -51,12 +51,13 @@ export function projectedOf(w: Window, lengthMs: number, now: number): number | 
   return elapsed === null || elapsed < 0.1 ? null : (w.percent / elapsed)
 }
 
-// Amber from a projected 100%, red from 125% or once 80% is used, whatever the pace.
+// Amber from a projected 100% or once 60% is used, red from 125% or once 80% is used: the used
+// floors hold whatever the pace, since near the top little is left either way.
 export function paceOf(w: Window, lengthMs: number, now: number): Pace {
   if (w.resetsAt !== null && w.resetsAt <= now) return 'ok'
   const projected = projectedOf(w, lengthMs, now)
   if (w.percent >= 80 || (projected !== null && projected >= 125)) return 'over'
-  if (projected !== null && projected >= 100) return 'ahead'
+  if (w.percent >= 60 || (projected !== null && projected >= 100)) return 'ahead'
   return 'ok'
 }
 
