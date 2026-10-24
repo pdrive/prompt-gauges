@@ -8,6 +8,25 @@ Two small Claude Code mods for keeping an eye on how much room you have left: on
 
 > **Cache Maxxer is not part of this repository.** The prompt-cache countdown on the left of the screenshot is [Cache Maxxer](https://github.com/vayaan-labs/cache-maxxer) by Vayaan Labs, a separate mod. Install it from there if you want it too; limit-band shares the row with it when it is installed and takes the row by itself when it is not. These mods work without it.
 
+## Install with an AI agent
+
+Give your coding agent (Claude Code, for example) this repository's URL and ask it to install the mods. The steps below are written for that agent.
+
+> **For the agent installing these mods.** Ask the user before each step that installs anything.
+>
+> 1. Ask which mods they want: **context-label** (context fill in the prompt footer), **limit-band** (the 5-hour and 7-day usage limits above the prompt; it shows only on a subscription with usage limits), or both.
+> 2. Ask whether they also want **Cache Maxxer** (the prompt-cache countdown, a separate mod by Vayaan Labs, not maintained here). Say plainly that it is someone else's mod; skip it if they say no.
+> 3. Install from a shell, in this order (limit-band before Cache Maxxer, so the two share one row):
+>    ```
+>    claude plugin install context-label --marketplace pdrive/prompt-gauges
+>    claude plugin install limit-band --marketplace pdrive/prompt-gauges
+>    claude plugin install cache-maxxer --marketplace vayaan-labs/plugins
+>    ```
+>    Leave out the lines for what they declined.
+> 4. If Cache Maxxer was already installed before limit-band, the two land on separate lines: in `~/.claude/settings.json`, move `"limit-band@prompt-gauges"` above `"cache-maxxer@vayaan-labs"` in `enabledPlugins`, with the user's OK.
+> 5. Tell the user to run `/reload-plugins` (or start a new session), and that the settings are in `/config` (`context-label.*`, `limit-band.*`; see the sections below).
+> 6. In the desktop app, where a shell is not at hand, the same is: **+** next to the prompt box → **Plugins** → **Add marketplace** `pdrive/prompt-gauges` → **Add plugin**.
+
 ## context-label
 
 The context window's fill, always visible in the prompt footer beside the model name, instead of behind a click:
