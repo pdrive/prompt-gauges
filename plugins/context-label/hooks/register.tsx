@@ -150,7 +150,7 @@ export const register: Register = (on, options) => {
             <Text dimColor>{bar.replace(/■/g, '')}</Text>
           </Text>
         )}
-        {cfg.show !== 'bar' && <Text key="text" dimColor>{`${cfg.show === 'both' ? ' ' : ''}${footerText(e.props.modes, c)}`}</Text>}
+        {cfg.show !== 'bar' && <Text key="text" dimColor mono>{`${cfg.show === 'both' ? ' ' : ''}${footerText(e.props.modes, c)}`}</Text>}
       </Box>
     )
   })

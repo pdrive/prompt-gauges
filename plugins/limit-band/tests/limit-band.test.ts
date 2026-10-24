@@ -1,6 +1,6 @@
 import { expect, mock, test } from 'claude-code/testing'
 
-import { barCells, barSvg, barTitle, elapsedOf, fillOf, hintPaceOf, label, PACE_COLORS, paceHint, paceOf, projectedOf, textRuns, toLimits, toPaceConfig, untilReset } from '../hooks/register'
+import { withTabularDigits, barCells, barSvg, barTitle, elapsedOf, fillOf, hintPaceOf, label, PACE_COLORS, paceHint, paceOf, projectedOf, textRuns, toLimits, toPaceConfig, untilReset } from '../hooks/register'
 
 const NOW = Date.parse('2026-10-14T20:00:00Z')
 
@@ -78,6 +78,16 @@ test('the arrow follows the pace settings: shown from orange_pace, red from red_
   expect(paceHint(at(49, 176), 5 * H, NOW, toPaceConfig({ orange_pace: 0 }))).toBe('')
   // The used floors do not color the arrow: 65% used on pace has no arrow
   expect(paceHint(at(65, 30), 5 * H, NOW)).toBe('')
+})
+
+test('the band beneath gets fixed-width digits on its Texts, nothing else changed', async () => {
+  const band = { type: 'Box', props: { key: 'cm' }, children: [{ type: 'Text', props: { dimColor: true }, children: ['59:42'] }, 'left'] }
+  expect(withTabularDigits(band as never)).toEqual({
+    type: 'Box',
+    props: { key: 'cm' },
+    children: [{ type: 'Text', props: { dimColor: true, tabular: true }, children: ['59:42'] }, 'left'],
+  })
+  expect(withTabularDigits(null)).toBe(null)
 })
 
 test('hovering the bar says what it shows', async () => {

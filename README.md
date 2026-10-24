@@ -71,7 +71,7 @@ Settings, with `/config` (the defaults are the values above). Any whole number, 
 
 Pace coloring is an idea from [PCritchfield/claude-gauges](https://github.com/PCritchfield/claude-gauges) (MIT), whose status line and session pane color plan limits the same way; this is its own implementation for the band above the prompt.
 
-It shares its row with [Cache Maxxer](https://github.com/vayaan-labs/plugins)'s band when that mod is installed (and moves under it while Cache Maxxer's detail is open); without it, it takes the row by itself. The row works when limit-band is drawn around Cache Maxxer's band, which follows the order of `enabledPlugins` in `~/.claude/settings.json`: if the two land on separate lines, list `limit-band@prompt-gauges` before `cache-maxxer@vayaan-labs` there and run `/reload-plugins`.
+It shares its row with [Cache Maxxer](https://github.com/vayaan-labs/plugins)'s band when that mod is installed (and moves under it while Cache Maxxer's detail is open); without it, it takes the row by itself. It also gives that band fixed-width digits, so its ticking seconds don't nudge the row. The row works when limit-band is drawn around Cache Maxxer's band, which follows the order of `enabledPlugins` in `~/.claude/settings.json`: if the two land on separate lines, list `limit-band@prompt-gauges` before `cache-maxxer@vayaan-labs` there and run `/reload-plugins`.
 
 ## Install
 

@@ -1,5 +1,5 @@
 import { atom, read, update } from 'claude-code'
-import type { ElementTable, PluginOptions, Register, SessionRateLimit } from 'claude-code'
+import type { ElementTable, PluginOptions, Register, RenderNode, SessionRateLimit } from 'claude-code'
 
 import type { Limits, Pace, PaceConfig, Window } from '../types'
 
@@ -47,6 +47,16 @@ export function toPaceConfig(options: PluginOptions): PaceConfig {
     orangePace: toPct(options.orange_pace, DEFAULT_PACE.orangePace, 500),
     redPace: toPct(options.red_pace, DEFAULT_PACE.redPace, 500),
   }
+}
+
+// The band drawn beneath this one (Cache Maxxer's) with fixed-width digits on every Text, so its
+// ticking seconds stop nudging the row; a copy, nothing else in it changed.
+export function withTabularDigits(node: RenderNode | null | undefined): RenderNode | null | undefined {
+  if (node === null || node === undefined || typeof node === 'string') return node
+  const el = node as { type: string; props?: Record<string, unknown>; children?: unknown }
+  const children = Array.isArray(el.children) ? el.children.map(c => withTabularDigits(c as RenderNode)) : el.children
+  const props = el.type === 'Text' ? { ...(el.props ?? {}), tabular: true } : el.props
+  return { ...el, ...(props ? { props } : {}), ...(children !== undefined ? { children } : {}) } as RenderNode
 }
 
 const toWindow = (l: SessionRateLimit | undefined): Window | null => {
@@ -239,7 +249,7 @@ export const register: Register = (on, options) => {
     const five = limits.fiveHour
     if (e.props.hasSurvey || five === null) return next(e)
 
-    const rest = await next(e)
+    const rest = withTabularDigits(await next(e))
     const now = await $.clock.now()
     const pct = shownPercent(five, now)
     const pace = paceOf(five, FIVE_HOURS, now, paceCfg)
