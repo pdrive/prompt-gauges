@@ -1,4 +1,4 @@
-# claude-mods
+# claude-gauges
 
 Two small Claude Code mods for keeping an eye on how much room you have left: one for the context window, one for the 5-hour and 7-day usage limits. They work in the terminal and in the desktop app's Code tab.
 
@@ -53,18 +53,18 @@ It shares its row with [Cache Maxxer](https://github.com/vayaan-labs/plugins)'s 
 At the prompt of a Claude Code terminal session:
 
 ```
-/plugin install context-label --marketplace pdrive/claude-mods
-/plugin install limit-band --marketplace pdrive/claude-mods
+/plugin install context-label --marketplace pdrive/claude-gauges
+/plugin install limit-band --marketplace pdrive/claude-gauges
 ```
 
 Answer `y` to add the marketplace, then pick a scope. From a shell:
 
 ```
-claude plugin install context-label --marketplace pdrive/claude-mods
-claude plugin install limit-band --marketplace pdrive/claude-mods
+claude plugin install context-label --marketplace pdrive/claude-gauges
+claude plugin install limit-band --marketplace pdrive/claude-gauges
 ```
 
-In the desktop app: click **+** next to the prompt box, then **Plugins**, **Add marketplace** with `pdrive/claude-mods`, then **Add plugin**.
+In the desktop app: click **+** next to the prompt box, then **Plugins**, **Add marketplace** with `pdrive/claude-gauges`, then **Add plugin**.
 
 ## Notes
 

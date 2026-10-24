@@ -1,5 +1,5 @@
 {
-  "name": "claude-mods",
+  "name": "claude-gauges",
   "owner": { "name": "pdrive" },
   "metadata": { "description": "Small Claude Code mods for keeping an eye on context and usage limits" },
   "plugins": [
