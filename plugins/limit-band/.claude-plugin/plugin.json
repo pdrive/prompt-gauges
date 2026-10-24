@@ -1,0 +1,10 @@
+{
+  "name": "limit-band",
+  "version": "0.2.0",
+  "description": "A thin colored line above the prompt for the 5-hour usage limit, with the 7-day limit beside it",
+  "types": "./types/index.d.ts",
+  "author": {
+    "name": "pdrive"
+  },
+  "license": "MIT"
+}

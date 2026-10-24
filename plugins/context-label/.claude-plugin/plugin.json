@@ -1,0 +1,63 @@
+{
+  "name": "context-label",
+  "version": "0.4.0",
+  "description": "The context window's fill (percent and used/total) always shown in the prompt footer, beside the model name",
+  "types": "./types/index.d.ts",
+  "userConfig": {
+    "yellow_at": {
+      "type": "string",
+      "title": "Yellow from",
+      "description": "Where the bar turns yellow, in tokens. Auto is 400k, or 100k on Haiku, whose price per token goes up 5x past 100k.",
+      "options": [
+        "auto",
+        "100k",
+        "200k",
+        "300k",
+        "400k",
+        "500k",
+        "off"
+      ],
+      "default": "auto"
+    },
+    "orange_at": {
+      "type": "string",
+      "title": "Orange from",
+      "description": "Where the bar turns orange, as a share of the way to auto-compact (of the whole window when auto-compact is off).",
+      "options": [
+        "60%",
+        "70%",
+        "80%",
+        "90%",
+        "off"
+      ],
+      "default": "70%"
+    },
+    "red_at": {
+      "type": "string",
+      "title": "Red from",
+      "description": "Where the bar turns red, as a share of the way to auto-compact (of the whole window when auto-compact is off). With auto-compact at 967k, 90% is 870k.",
+      "options": [
+        "85%",
+        "90%",
+        "95%",
+        "off"
+      ],
+      "default": "90%"
+    },
+    "show": {
+      "type": "string",
+      "title": "Show",
+      "description": "What the footer shows: the four-square bar, the ctx text, or both.",
+      "options": [
+        "bar and text",
+        "bar",
+        "text"
+      ],
+      "default": "bar and text"
+    }
+  },
+  "author": {
+    "name": "pdrive"
+  },
+  "license": "MIT"
+}
