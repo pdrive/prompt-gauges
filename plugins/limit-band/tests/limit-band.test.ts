@@ -1,6 +1,6 @@
 import { expect, mock, test } from 'claude-code/testing'
 
-import { barCells, barSvg, elapsedOf, label, PACE_COLORS, paceHint, paceOf, projectedOf, sevenLabel, toLimits, toPaceConfig, untilReset } from '../hooks/register'
+import { barCells, barSvg, elapsedOf, fillOf, label, PACE_COLORS, paceHint, paceOf, projectedOf, textRuns, toLimits, toPaceConfig, untilReset } from '../hooks/register'
 
 const NOW = Date.parse('2026-10-14T20:00:00Z')
 
@@ -32,13 +32,21 @@ test('pace: projected use over the share of the window gone', async () => {
   expect(elapsedOf({ percent: 10, resetsAt: null }, 5 * H, NOW)).toBe(null)
 })
 
-test('the 7-day text keeps its reset time and adds its projection when ahead', async () => {
+test('the text colors the 5-hour percent by fill and each hint by pace, the rest dim', async () => {
   const D = 24 * 60
-  // 33% with 4d 18h left of 7d: 32% gone, heading for 103%
-  expect(sevenLabel(at(33, 4 * D + 18 * 60), NOW)).toBe('33% (4d 18h) ↑103%')
-  expect(paceOf(at(33, 4 * D + 18 * 60), 7 * 24 * H, NOW)).toBe('ahead')
-  // On pace: no hint
-  expect(sevenLabel(at(20, 4 * D), NOW)).toBe('20% (4d 0h)')
+  const runs = textRuns(at(67, 141), at(33, 4 * D + 17 * 60), NOW)
+  expect(runs.map(r => r.text).join('')).toBe('67% (2h 21m) ↑126% · 7d 33% (4d 17h) ↑101%')
+  expect(runs).toEqual([
+    { text: '67%', color: PACE_COLORS.ahead },
+    { text: ' (2h 21m)' },
+    { text: ' ↑126%', color: PACE_COLORS.ahead },
+    { text: ' · 7d 33% (4d 17h)' },
+    { text: ' ↑101%', color: PACE_COLORS.ahead },
+  ])
+  // By fill alone: green below 60%, orange from 60%, red from 90%
+  expect([59, 60, 89, 90].map(p => fillOf(p))).toEqual(['ok', 'ahead', 'ahead', 'over'])
+  // On pace: no hints, the 5-hour percent green
+  expect(textRuns(at(30, 150), null, NOW)).toEqual([{ text: '30%', color: PACE_COLORS.ok }, { text: ' (2h 30m)' }])
 })
 
 test('settings move or turn off each threshold', async () => {

@@ -85,9 +85,6 @@ export function paceHint(w: Window, lengthMs: number, now: number): string {
   return projected !== null && projected >= 100 ? ` ↑${Math.round(projected)}%` : ''
 }
 
-// The 7-day text: "33% (4d 18h)", with " ↑103%" after it once it is ahead of pace.
-export const sevenLabel = (w: Window, now: number) => `${label(w, now)}${paceHint(w, SEVEN_DAYS, now)}`
-
 // "2h 14m", "3d 4h", "12m"; null when the window has no reset time.
 export function untilReset(resetsAt: number | null, now: number): string | null {
   if (resetsAt === null) return null
@@ -111,6 +108,36 @@ export function label(w: Window, now: number): string {
 }
 
 const shownPercent = (w: Window, now: number) => (w.resetsAt !== null && w.resetsAt <= now ? 0 : w.percent)
+
+// How full the window is, by the used floors alone: green, orange from 60%, red from 90% (the defaults).
+export function fillOf(percent: number, cfg: PaceConfig = DEFAULT_PACE): Pace {
+  if (cfg.redUsed !== null && percent >= cfg.redUsed) return 'over'
+  if (cfg.orangeUsed !== null && percent >= cfg.orangeUsed) return 'ahead'
+  return 'ok'
+}
+
+// The band's text as runs, each with its color or none (dim): the 5-hour percent by how full it is,
+// each `↑` hint by its window's pace, the times and the 7-day percent dim.
+// "67% (2h 21m) ↑126% · 7d 33% (4d 17h) ↑102%"
+export function textRuns(five: Window, seven: Window | null, now: number, cfg: PaceConfig = DEFAULT_PACE): { text: string; color?: string }[] {
+  const left = (w: Window) => {
+    const t = untilReset(w.resetsAt, now)
+    return t && t !== 'reset' ? ` (${t})` : ''
+  }
+  const fivePct = shownPercent(five, now)
+  const runs: { text: string; color?: string }[] = [
+    { text: fmtPct(fivePct), color: PACE_COLORS[fillOf(fivePct, cfg)] },
+    { text: left(five) },
+  ]
+  const fiveHint = paceHint(five, FIVE_HOURS, now)
+  if (fiveHint) runs.push({ text: fiveHint, color: PACE_COLORS[paceOf(five, FIVE_HOURS, now, cfg)] })
+  if (seven) {
+    runs.push({ text: ` · 7d ${fmtPct(shownPercent(seven, now))}${left(seven)}` })
+    const sevenHint = paceHint(seven, SEVEN_DAYS, now)
+    if (sevenHint) runs.push({ text: sevenHint, color: PACE_COLORS[paceOf(seven, SEVEN_DAYS, now, cfg)] })
+  }
+  return runs
+}
 
 // The bar is 4px high in an 8px box, so the clock's tick stands out above and below it.
 export function barSvg(percent: number, pace: Pace, elapsed: number | null, width = BAR_PX): string {
@@ -177,13 +204,7 @@ export const register: Register = (on, options) => {
     const pace = paceOf(five, FIVE_HOURS, now, paceCfg)
     const elapsed = elapsedOf(five, FIVE_HOURS, now)
     const seven = limits.sevenDay
-    const fiveText = `${label(five, now)}${paceHint(five, FIVE_HOURS, now)}`
-    // The 5-hour figures take the bar's color once it is ahead, as the 7-day ones take theirs
-    const fiveColor = pace === 'ok' ? undefined : PACE_COLORS[pace]
-    const sevenPace = seven ? paceOf(seven, SEVEN_DAYS, now, paceCfg) : 'ok'
-    const sevenText = seven ? sevenLabel(seven, now) : null
-    // The 7-day part takes its pace color once it is ahead; on pace it stays dim like the rest.
-    const sevenColor = sevenPace === 'ok' ? undefined : PACE_COLORS[sevenPace]
+    const runs = textRuns(five, seven, now, paceCfg)
     // Beside Cache Maxxer's band on one row, except when its detail is open: then under it, full width.
     const isUnder = !(await read($, cmHidden)) && (await read($, cmExpanded))
     const row = { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', columnGap: 2 } as const
@@ -206,9 +227,7 @@ export const register: Register = (on, options) => {
             />
             {/* One Text with the runs nested: as sibling Texts the desktop spaces them apart */}
             <Text key="text" dimColor>
-              {fiveColor ? <Text color={fiveColor}>{fiveText}</Text> : fiveText}
-              {sevenText !== null && ' · 7d '}
-              {sevenText !== null && (sevenColor ? <Text color={sevenColor}>{sevenText}</Text> : sevenText)}
+              {runs.map((r, i) => (r.color ? <Text key={`t${i}`} color={r.color}>{r.text}</Text> : r.text))}
             </Text>
           </Box>
         </Box>
@@ -228,9 +247,7 @@ export const register: Register = (on, options) => {
           )}
           <Text key="text" dimColor>
             {' '}
-            {fiveColor ? <Text color={fiveColor}>{fiveText}</Text> : fiveText}
-            {sevenText !== null && ' · 7d '}
-            {sevenText !== null && (sevenColor ? <Text color={sevenColor}>{sevenText}</Text> : sevenText)}
+            {runs.map((r, i) => (r.color ? <Text key={`t${i}`} color={r.color}>{r.text}</Text> : r.text))}
           </Text>
         </Box>
       </Box>
