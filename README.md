@@ -55,8 +55,7 @@ The bar is colored by **pace**, not by how full it is. 49% used sounds fine, but
 - in the text, the 5-hour percent is colored by how full it is (green, orange from 60%, red from 90%) and each hint's `↑` by its window's pace; the numbers after it, the times and the 7-day percent stay dim;
 - `↑119%` shows the projection once it reaches the orange pace setting (100% by default), for the 7-day window too; its arrow is orange, or red past the red pace setting;
 - the **tick** on the bar marks where the window's clock is: a fill past the tick is ahead of pace;
-- no projection in the first tenth of a window, when it would be noise; only the used floors apply then;
-- in the desktop app, **hover the bar** for the figures in words: how much is used, how much of the window has gone, where this rate ends up and which line it has crossed.
+- no projection in the first tenth of a window, when it would be noise; only the used floors apply then.
 
 The percents come from the last API response; the countdowns tick on their own. It shows only on a subscription with usage limits.
 

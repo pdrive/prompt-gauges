@@ -167,7 +167,7 @@ export function textRuns(five: Window, seven: Window | null, now: number, cfg: P
 
 const PACE_WORDS: Record<Pace, string> = { ok: 'on pace', ahead: 'ahead of pace', over: 'well ahead of pace' }
 
-// What the bar says, for its hover tooltip and its alt text:
+// What the bar says, as its alt text:
 // "5-hour limit: 67% used, 53% of the window gone (resets in 2h 21m). At this rate: 126% by the reset, ahead of pace."
 export function barTitle(w: Window, now: number, cfg: PaceConfig = DEFAULT_PACE): string {
   const pct = shownPercent(w, now)
@@ -185,20 +185,16 @@ export function barTitle(w: Window, now: number, cfg: PaceConfig = DEFAULT_PACE)
   )
 }
 
-const escapeXml = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-
-// The bar is 4px high in an 8px box, so the clock's tick stands out above and below it. A transparent
-// rect over the whole box carries the hover tooltip, so it shows anywhere on the bar.
-export function barSvg(percent: number, pace: Pace, elapsed: number | null, width = BAR_PX, title = ''): string {
+// The bar is 4px high in an 8px box, so the clock's tick stands out above and below it. Drawn as an
+// image: a hover tooltip needs an interactive frame, and the frame reloads (flashes) on every redraw.
+export function barSvg(percent: number, pace: Pace, elapsed: number | null, width = BAR_PX): string {
   const fill = Math.round((width * Math.min(Math.max(percent, 0), 100)) / 100)
   const tickX = elapsed === null ? null : Math.min(width - 2, Math.max(0, Math.round(elapsed * width) - 1))
   return (
     `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="8" viewBox="0 0 ${width} 8">` +
-    (title ? `<title>${escapeXml(title)}</title>` : '') +
     `<rect x="0" y="2" width="${width}" height="4" rx="2" fill="${TRACK}"/>` +
     (fill > 0 ? `<rect x="0" y="2" width="${fill}" height="4" rx="2" fill="${PACE_COLORS[pace]}"/>` : '') +
     (tickX === null ? '' : `<rect x="${tickX}" y="0" width="2" height="8" rx="1" fill="${TICK}"/>`) +
-    (title ? `<rect x="0" y="0" width="${width}" height="8" fill="transparent"><title>${escapeXml(title)}</title></rect>` : '') +
     `</svg>`
   )
 }
@@ -272,9 +268,8 @@ export const register: Register = (on, options) => {
             <Text key="name" dimColor>5h</Text>
             <Svg
               key="bar"
-              source={barSvg(pct, pace, elapsed, isUnder ? BAR_PX * 2 : BAR_PX, title)}
+              source={barSvg(pct, pace, elapsed, isUnder ? BAR_PX * 2 : BAR_PX)}
               alt={title}
-              isInteractive
               width={isUnder ? BAR_PX * 2 : BAR_PX}
               height={8}
             />

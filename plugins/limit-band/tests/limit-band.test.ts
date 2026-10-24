@@ -90,12 +90,11 @@ test('the band beneath gets fixed-width digits on its Texts, nothing else change
   expect(withTabularDigits(null)).toBe(null)
 })
 
-test('hovering the bar says what it shows', async () => {
+test('the bar describes what it shows', async () => {
   expect(barTitle(at(67, 141), NOW)).toBe(
     '5-hour limit: 67% used, 53% of the window gone (resets in 2h 21m). At this rate: 126% by the reset, ahead of pace. Past the orange line of 60% used.',
   )
   expect(barTitle(at(10, 290), NOW)).toBe('5-hour limit: 10% used, 3% of the window gone (resets in 4h 50m). Too early in the window to project.')
-  expect(barSvg(50, 'ok', 0.5, 80, 'a < b')).toContain('<title>a &lt; b</title>')
 })
 
 test('the bar shows the fill in its pace color and a tick at the clock', async () => {
