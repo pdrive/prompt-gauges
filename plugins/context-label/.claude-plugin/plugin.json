@@ -1,6 +1,6 @@
 {
   "name": "context-label",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "The context window's fill (percent and used/total) always shown in the prompt footer, beside the model name",
   "types": "./types/index.d.ts",
   "userConfig": {

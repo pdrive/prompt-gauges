@@ -1,6 +1,6 @@
 # prompt-gauges
 
-Two small Claude Code mods for keeping an eye on how much room you have left: one for the context window, one for the 5-hour and 7-day usage limits. They work in the terminal and in the desktop app's Code tab.
+Two small Claude Code mods for keeping an eye on how much room you have left: one for the context window, one for the 5-hour and 7-day usage limits. They work in the terminal and in the desktop app's Code tab. What changed in each version: [CHANGELOG.md](CHANGELOG.md).
 
 ![limit-band above the prompt and context-label in the footer, in the desktop app](docs/screenshot.png)
 
@@ -27,7 +27,7 @@ Give your coding agent (Claude Code, for example) this repository's URL and ask 
 > 5. Tell the user to run `/reload-plugins` (or start a new session), and that the settings are in `/config` (`context-label.*`, `limit-band.*`; see the sections below).
 > 6. In the desktop app, where a shell is not at hand, the same is: **+** next to the prompt box → **Plugins** → **Add marketplace** `pdrive/prompt-gauges` → **Add plugin**.
 
-## context-label
+## context-label · v0.6.0
 
 The context window's fill, always visible in the prompt footer beside the model name, instead of behind a click:
 
@@ -60,7 +60,7 @@ Settings, with `/config`. The thresholds take any whole number from 0 to 100, an
 
 The levels are checked from red down and the first that is reached wins, so they never overlap: a lower level set above a higher one simply never shows.
 
-## limit-band
+## limit-band · v0.7.0
 
 A thin line above the prompt for the 5-hour usage window, with its percent and time to reset, and the 7-day window beside it:
 
@@ -127,7 +127,7 @@ Before a commit:
 
 1. `claude plugin validate .` and `claude plugin validate plugins/<mod>`.
 2. `claude plugin test plugins/<mod>` for each mod changed, with the tests updated for the new behaviour.
-3. Bump the mod's `version` in its `plugin.json` for a change people should get.
+3. Bump the mod's `version` in its `plugin.json` for a change people should get, and add it to its heading here and to [CHANGELOG.md](CHANGELOG.md).
 4. Keep this README in step: what each mod shows, its colors and thresholds, its settings.
 
 Limits of the desktop app worth knowing:
