@@ -1,7 +1,11 @@
 {
-  "name": "claude-gauges",
-  "owner": { "name": "pdrive" },
-  "metadata": { "description": "Small Claude Code mods for keeping an eye on context and usage limits" },
+  "name": "prompt-gauges",
+  "owner": {
+    "name": "pdrive"
+  },
+  "metadata": {
+    "description": "Small Claude Code mods for keeping an eye on context and usage limits"
+  },
   "plugins": [
     {
       "name": "context-label",
@@ -11,7 +15,7 @@
     {
       "name": "limit-band",
       "source": "./plugins/limit-band",
-      "description": "A thin colored line above the prompt for the 5-hour usage limit, with its time to reset and the 7-day limit beside it"
+      "description": "A thin line above the prompt for the 5-hour usage limit, colored by pace (where it would end at the current rate), with its time to reset, a tick at the window's clock and the 7-day limit beside it"
     }
   ]
 }

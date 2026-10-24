@@ -1,4 +1,4 @@
-# claude-gauges
+# prompt-gauges
 
 Two small Claude Code mods for keeping an eye on how much room you have left: one for the context window, one for the 5-hour and 7-day usage limits. They work in the terminal and in the desktop app's Code tab.
 
@@ -38,13 +38,23 @@ Settings, with `/config`:
 
 ## limit-band
 
-A thin line above the prompt for the 5-hour usage window, colored from green through yellow and orange to red as it fills, with its percent and time to reset, and the 7-day window beside it:
+A thin line above the prompt for the 5-hour usage window, with its percent and time to reset, and the 7-day window beside it:
 
 ```
-5h ━━━━━━──────────────  27% (3h 45m)  ·  7d 28% (4d 19h)
+5h ━━━━━━━━┃━━──────────  49% (2h 56m)  ↑119%  ·  7d 31% (4d 18h)
 ```
+
+The bar is colored by **pace**, not by how full it is. 49% used sounds fine, but if only 41% of the window has gone by, you are on course to hit the limit before it resets. So:
+
+- **projected** = used % ÷ the share of the window gone by;
+- **green** while on pace, **amber** from a projected 100%, **red** from 125% or once 80% is used, whatever the pace;
+- `↑119%` shows the projection whenever it is 100% or more (on the 7-day window too);
+- the **tick** on the bar marks where the window's clock is: a fill past the tick is ahead of pace;
+- no projection in the first tenth of a window, when it would be noise; only the 80% backstop applies then.
 
 The percents come from the last API response; the countdowns tick on their own. It shows only on a subscription with usage limits.
+
+Pace coloring is an idea from [PCritchfield/claude-gauges](https://github.com/PCritchfield/claude-gauges) (MIT), whose status line and session pane color plan limits the same way; this is its own implementation for the band above the prompt.
 
 It shares its row with [Cache Maxxer](https://github.com/vayaan-labs/plugins)'s band when that mod is installed (and moves under it while Cache Maxxer's detail is open); without it, it takes the row by itself.
 
@@ -53,18 +63,18 @@ It shares its row with [Cache Maxxer](https://github.com/vayaan-labs/plugins)'s 
 At the prompt of a Claude Code terminal session:
 
 ```
-/plugin install context-label --marketplace pdrive/claude-gauges
-/plugin install limit-band --marketplace pdrive/claude-gauges
+/plugin install context-label --marketplace pdrive/prompt-gauges
+/plugin install limit-band --marketplace pdrive/prompt-gauges
 ```
 
 Answer `y` to add the marketplace, then pick a scope. From a shell:
 
 ```
-claude plugin install context-label --marketplace pdrive/claude-gauges
-claude plugin install limit-band --marketplace pdrive/claude-gauges
+claude plugin install context-label --marketplace pdrive/prompt-gauges
+claude plugin install limit-band --marketplace pdrive/prompt-gauges
 ```
 
-In the desktop app: click **+** next to the prompt box, then **Plugins**, **Add marketplace** with `pdrive/claude-gauges`, then **Add plugin**.
+In the desktop app: click **+** next to the prompt box, then **Plugins**, **Add marketplace** with `pdrive/prompt-gauges`, then **Add plugin**.
 
 ## Notes
 
