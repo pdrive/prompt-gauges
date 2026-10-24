@@ -16,8 +16,9 @@ test('pace: projected use over the share of the window gone', async () => {
   // On pace: 30% used halfway
   expect(paceOf(at(30, 150), 5 * H, NOW)).toBe('ok')
   expect(paceHint(at(30, 150), 5 * H, NOW)).toBe('')
-  // Well past it, or 90% used whatever the clock
-  expect(paceOf(at(70, 150), 5 * H, NOW)).toBe('over')
+  // Well past pace is still orange by default: red is kept for 90% used
+  expect(paceOf(at(70, 150), 5 * H, NOW)).toBe('ahead')
+  expect(paceOf(at(70, 150), 5 * H, NOW, toPaceConfig({ red_pace: '125%' }))).toBe('over')
   expect(paceOf(at(90, 10), 5 * H, NOW)).toBe('over')
   expect(paceOf(at(89, 10), 5 * H, NOW)).toBe('ahead')
   // Orange from 60% used even behind pace: 60% with 30m left is heading for 67%
@@ -41,7 +42,7 @@ test('the 7-day text keeps its reset time and adds its projection when ahead', a
 })
 
 test('settings move or turn off each threshold', async () => {
-  expect(toPaceConfig({})).toEqual({ orangeUsed: 60, redUsed: 90, orangePace: 100, redPace: 125 })
+  expect(toPaceConfig({})).toEqual({ orangeUsed: 60, redUsed: 90, orangePace: 100, redPace: null })
   const cfg = toPaceConfig({ orange_used: 'off', red_used: '80%', orange_pace: '110%', red_pace: 'off' })
   expect(cfg).toEqual({ orangeUsed: null, redUsed: 80, orangePace: 110, redPace: null })
   // 49% heading for 119%: still orange with orange at a projected 110%

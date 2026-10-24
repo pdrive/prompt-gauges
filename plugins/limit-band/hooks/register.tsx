@@ -19,7 +19,7 @@ const cmExpanded = atom({ plugin: 'cache-maxxer', key: 'expanded' } as const, fa
 
 const TICK_MS = 30_000
 const BAR_CELLS = 20
-const BAR_PX = 120
+const BAR_PX = 70
 const TRACK = '#8888884d'
 
 const HOUR = 3_600_000
@@ -29,7 +29,7 @@ const TICK = '#bdbdbd'
 // Orange and red far enough apart to tell without the other beside them
 export const PACE_COLORS: Record<Pace, string> = { ok: '#3cc43c', ahead: '#ff9800', over: '#e53935' }
 
-export const DEFAULT_PACE: PaceConfig = { orangeUsed: 60, redUsed: 90, orangePace: 100, redPace: 125 }
+export const DEFAULT_PACE: PaceConfig = { orangeUsed: 60, redUsed: 90, orangePace: 100, redPace: null }
 
 const pick = (v: unknown, allowed: readonly string[], fallback: string): string =>
   typeof v === 'string' && allowed.includes(v) ? v : fallback
@@ -41,7 +41,7 @@ export function toPaceConfig(options: PluginOptions): PaceConfig {
     orangeUsed: pctOrOff(pick(options.orange_used, ['50%', '60%', '70%', 'off'], '60%')),
     redUsed: pctOrOff(pick(options.red_used, ['80%', '90%', '95%', 'off'], '90%')),
     orangePace: pctOrOff(pick(options.orange_pace, ['90%', '100%', '110%', 'off'], '100%')),
-    redPace: pctOrOff(pick(options.red_pace, ['110%', '125%', '150%', 'off'], '125%')),
+    redPace: pctOrOff(pick(options.red_pace, ['110%', '125%', '150%', 'off'], 'off')),
   }
 }
 
@@ -68,8 +68,8 @@ export function projectedOf(w: Window, lengthMs: number, now: number): number | 
   return elapsed === null || elapsed < 0.1 ? null : (w.percent / elapsed)
 }
 
-// Orange from a projected 100% or once 60% is used, red from 125% or once 90% is used (the defaults):
-// the used floors hold whatever the pace, since near the top little is left either way.
+// Orange from a projected 100% or once 60% is used, red once 90% is used (the defaults; red by pace is
+// off unless set): the used floors hold whatever the pace, since near the top little is left either way.
 export function paceOf(w: Window, lengthMs: number, now: number, cfg: PaceConfig = DEFAULT_PACE): Pace {
   if (w.resetsAt !== null && w.resetsAt <= now) return 'ok'
   const projected = projectedOf(w, lengthMs, now)
@@ -178,6 +178,8 @@ export const register: Register = (on, options) => {
     const elapsed = elapsedOf(five, FIVE_HOURS, now)
     const seven = limits.sevenDay
     const fiveText = `${label(five, now)}${paceHint(five, FIVE_HOURS, now)}`
+    // The 5-hour figures take the bar's color once it is ahead, as the 7-day ones take theirs
+    const fiveColor = pace === 'ok' ? undefined : PACE_COLORS[pace]
     const sevenPace = seven ? paceOf(seven, SEVEN_DAYS, now, paceCfg) : 'ok'
     const sevenText = seven ? sevenLabel(seven, now) : null
     // The 7-day part takes its pace color once it is ahead; on pace it stays dim like the rest.
@@ -204,7 +206,7 @@ export const register: Register = (on, options) => {
             />
             {/* One Text with the runs nested: as sibling Texts the desktop spaces them apart */}
             <Text key="text" dimColor>
-              {fiveText}
+              {fiveColor ? <Text color={fiveColor}>{fiveText}</Text> : fiveText}
               {sevenText !== null && ' · 7d '}
               {sevenText !== null && (sevenColor ? <Text color={sevenColor}>{sevenText}</Text> : sevenText)}
             </Text>
@@ -225,7 +227,8 @@ export const register: Register = (on, options) => {
             : <Text key={`b${i}`} dimColor>{r.text}</Text>,
           )}
           <Text key="text" dimColor>
-            {` ${fiveText}`}
+            {' '}
+            {fiveColor ? <Text color={fiveColor}>{fiveText}</Text> : fiveText}
             {sevenText !== null && ' · 7d '}
             {sevenText !== null && (sevenColor ? <Text color={sevenColor}>{sevenText}</Text> : sevenText)}
           </Text>

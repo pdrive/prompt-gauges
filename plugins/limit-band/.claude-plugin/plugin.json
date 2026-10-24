@@ -47,14 +47,14 @@
     "red_pace": {
       "type": "string",
       "title": "Red from projected",
-      "description": "Turn red when the current rate would end the window at this share of the limit.",
+      "description": "Turn red when the current rate would end the window at this share of the limit. Off by default: red is kept for 90% used.",
       "options": [
         "110%",
         "125%",
         "150%",
         "off"
       ],
-      "default": "125%"
+      "default": "off"
     }
   }
 }
