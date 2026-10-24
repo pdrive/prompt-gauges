@@ -25,11 +25,11 @@ const COLORS: Record<Level, string> = { green: '#3cc43c', yellow: '#e0c020', ora
 const pick = <T extends string>(v: unknown, allowed: readonly T[], fallback: T): T =>
   typeof v === 'string' && (allowed as readonly string[]).includes(v) ? (v as T) : fallback
 
-// A percent setting as a share: 72 -> 0.72, "72,5" or "72.5%" -> 0.725, 0 or "off" -> null (off);
-// a value outside 0 to 100, or no number at all, falls back to the default.
+// A whole-percent setting as a share: 72 -> 0.72, 0 or "off" -> null (off); a value outside 0 to 100,
+// or no number at all, falls back to the default.
 export function toShare(v: unknown, fallback: number): number | null {
-  const n = typeof v === 'number' ? v : typeof v === 'string' ? (v.trim() === 'off' ? 0 : parseFloat(v.replace(',', '.'))) : NaN
-  const pct = Number.isFinite(n) && n >= 0 && n <= 100 ? n : fallback
+  const n = typeof v === 'number' ? v : typeof v === 'string' ? (v.trim() === 'off' ? 0 : parseInt(v, 10)) : NaN
+  const pct = Number.isFinite(n) && n >= 0 && n <= 100 ? Math.round(n) : fallback
   return pct === 0 ? null : pct / 100
 }
 

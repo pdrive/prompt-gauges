@@ -65,8 +65,8 @@ test('settings move or turn off each threshold', async () => {
   // 65% with 30m left heads for 72%: orange by the 60% floor, green with it off
   expect(paceOf(at(65, 30), 5 * H, NOW)).toBe('ahead')
   expect(paceOf(at(65, 30), 5 * H, NOW, cfg)).toBe('ok')
-  // Any number in range, decimals with a dot or a comma; out of range or no number: the default
-  expect(toPaceConfig({ orange_used: '62,5', red_used: 95.5 })).toMatchObject({ orangeUsed: 62.5, redUsed: 95.5 })
+  // Any whole number in range; out of range or no number: the default
+  expect(toPaceConfig({ orange_used: '65', red_used: 95 })).toMatchObject({ orangeUsed: 65, redUsed: 95 })
   expect(toPaceConfig({ red_used: 150, orange_pace: 'soon' })).toMatchObject({ redUsed: 90, orangePace: 100 })
 })
 

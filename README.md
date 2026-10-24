@@ -27,7 +27,7 @@ The context window's fill, always visible in the prompt footer beside the model 
   Orange and red follow your session's auto-compact point (read from Claude Code, as `/context` shows it); with auto-compact off they follow the whole window.
 - **The text** is the same figures as the app's own context popover, updated after every response. A fresh or just-compacted session shows nothing until its first response.
 
-Settings, with `/config`. The thresholds take any number from 0 to 100, decimals with a dot or a comma, and 0 turns a level off:
+Settings, with `/config`. The thresholds take any whole number from 0 to 100, and 0 turns a level off:
 
 ```
 /config context-label.yellow_at=50          # % of the window
@@ -60,7 +60,7 @@ The bar is colored by **pace**, not by how full it is. 49% used sounds fine, but
 
 The percents come from the last API response; the countdowns tick on their own. It shows only on a subscription with usage limits.
 
-Settings, with `/config` (the defaults are the values above). Any number, decimals with a dot or a comma, 0 is off; the levels are checked from red down, so they never overlap:
+Settings, with `/config` (the defaults are the values above). Any whole number, 0 is off; the levels are checked from red down, so they never overlap:
 
 ```
 /config limit-band.orange_used=60    # % used, 0 to 100

@@ -7,7 +7,7 @@
     "yellow_at": {
       "type": "number",
       "title": "Yellow from (% of the window)",
-      "description": "Turn yellow at this share of the context window, 0 to 100 (decimals allowed); 0 is off. Orange and red win over it when they are reached first.",
+      "description": "Turn yellow at this share of the context window, 0 to 100; 0 is off. Orange and red win over it when they are reached first.",
       "min": 0,
       "max": 100,
       "default": 50

@@ -11,7 +11,7 @@
     "orange_used": {
       "type": "number",
       "title": "Orange once used (%)",
-      "description": "Turn orange once this much of the 5-hour limit is used, whatever the pace, 0 to 100 (decimals allowed); 0 is off.",
+      "description": "Turn orange once this much of the 5-hour limit is used, whatever the pace, 0 to 100; 0 is off.",
       "min": 0,
       "max": 100,
       "default": 60

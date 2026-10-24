@@ -31,11 +31,11 @@ export const PACE_COLORS: Record<Pace, string> = { ok: '#3cc43c', ahead: '#ff980
 
 export const DEFAULT_PACE: PaceConfig = { orangeUsed: 60, redUsed: 90, orangePace: 100, redPace: null }
 
-// A percent setting: 60 -> 60, "62,5" or "62.5%" -> 62.5, 0 or "off" -> null (off); a value outside
-// 0 to max, or no number at all, falls back to the default.
+// A whole-percent setting: 60 -> 60, 0 or "off" -> null (off); a value outside 0 to max, or no number
+// at all, falls back to the default.
 export function toPct(v: unknown, fallback: number | null, max: number): number | null {
-  const n = typeof v === 'number' ? v : typeof v === 'string' ? (v.trim() === 'off' ? 0 : parseFloat(v.replace(',', '.'))) : NaN
-  const pct = Number.isFinite(n) && n >= 0 && n <= max ? n : (fallback ?? 0)
+  const n = typeof v === 'number' ? v : typeof v === 'string' ? (v.trim() === 'off' ? 0 : parseInt(v, 10)) : NaN
+  const pct = Number.isFinite(n) && n >= 0 && n <= max ? Math.round(n) : (fallback ?? 0)
   return pct === 0 ? null : pct
 }
 
