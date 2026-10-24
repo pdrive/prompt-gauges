@@ -10,7 +10,13 @@ Two small Claude Code mods for keeping an eye on how much room you have left: on
 
 ## Install with an AI agent
 
-Give your coding agent (Claude Code, for example) this repository's URL and ask it to install the mods. The steps below are written for that agent.
+Copy this into your coding agent (Claude Code, for example); the copy button is in the block's corner:
+
+```text
+Install the Claude Code mods from https://github.com/pdrive/prompt-gauges. Read the "Install with an AI agent" section of its README and follow those steps, asking me before you install anything.
+```
+
+The steps below are written for that agent.
 
 > **For the agent installing these mods.** Ask the user before each step that installs anything.
 >
