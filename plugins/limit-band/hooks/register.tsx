@@ -1,13 +1,13 @@
 import { atom, read, update } from 'claude-code'
-import type { ElementTable, Register, SessionRateLimit } from 'claude-code'
+import type { ElementTable, PluginOptions, Register, SessionRateLimit } from 'claude-code'
 
-import type { Limits, Pace, Window } from '../types'
+import type { Limits, Pace, PaceConfig, Window } from '../types'
 
 // A thin line above the prompt for the 5-hour usage window, with its percent and time to reset, and
 // the 7-day window beside it. The bar is colored by pace, not by how full it is: where the window
 // would end at the rate used so far (used % over the share of the window gone). Green on pace, amber
-// when it would run out before the reset or once 60% is used, red well past that or once 90% is used; `↑117%` says where
-// it is heading, and a tick on the bar stands where the window's clock is.
+// when it would run out before the reset or once 60% is used, red well past that or once 90% is used
+// (each a setting); `↑117%` says where it is heading, and a tick on the bar stands where the window's clock is.
 // The percents come from the last API response; the countdowns tick here. It sits on the same row
 // as whatever band is drawn beneath it (Cache Maxxer's): that band takes the room left, this sits at the right end.
 
@@ -27,6 +27,22 @@ const FIVE_HOURS = 5 * HOUR
 const SEVEN_DAYS = 7 * 24 * HOUR
 const TICK = '#bdbdbd'
 export const PACE_COLORS: Record<Pace, string> = { ok: '#3cc43c', ahead: '#e0a020', over: '#e8453c' }
+
+export const DEFAULT_PACE: PaceConfig = { amberUsed: 60, redUsed: 90, amberPace: 100, redPace: 125 }
+
+const pick = (v: unknown, allowed: readonly string[], fallback: string): string =>
+  typeof v === 'string' && allowed.includes(v) ? v : fallback
+const pctOrOff = (s: string) => (s === 'off' ? null : parseInt(s, 10))
+
+// "60%" -> 60, "off" -> null; a value outside a picker's options falls back to its default.
+export function toPaceConfig(options: PluginOptions): PaceConfig {
+  return {
+    amberUsed: pctOrOff(pick(options.amber_used, ['50%', '60%', '70%', 'off'], '60%')),
+    redUsed: pctOrOff(pick(options.red_used, ['80%', '90%', '95%', 'off'], '90%')),
+    amberPace: pctOrOff(pick(options.amber_pace, ['90%', '100%', '110%', 'off'], '100%')),
+    redPace: pctOrOff(pick(options.red_pace, ['110%', '125%', '150%', 'off'], '125%')),
+  }
+}
 
 const toWindow = (l: SessionRateLimit | undefined): Window | null => {
   if (!l) return null
@@ -51,13 +67,14 @@ export function projectedOf(w: Window, lengthMs: number, now: number): number | 
   return elapsed === null || elapsed < 0.1 ? null : (w.percent / elapsed)
 }
 
-// Amber from a projected 100% or once 60% is used, red from 125% or once 90% is used: the used
-// floors hold whatever the pace, since near the top little is left either way.
-export function paceOf(w: Window, lengthMs: number, now: number): Pace {
+// Amber from a projected 100% or once 60% is used, red from 125% or once 90% is used (the defaults):
+// the used floors hold whatever the pace, since near the top little is left either way.
+export function paceOf(w: Window, lengthMs: number, now: number, cfg: PaceConfig = DEFAULT_PACE): Pace {
   if (w.resetsAt !== null && w.resetsAt <= now) return 'ok'
   const projected = projectedOf(w, lengthMs, now)
-  if (w.percent >= 90 || (projected !== null && projected >= 125)) return 'over'
-  if (w.percent >= 60 || (projected !== null && projected >= 100)) return 'ahead'
+  const reaches = (value: number | null, at: number | null) => value !== null && at !== null && value >= at
+  if (reaches(w.percent, cfg.redUsed) || reaches(projected, cfg.redPace)) return 'over'
+  if (reaches(w.percent, cfg.amberUsed) || reaches(projected, cfg.amberPace)) return 'ahead'
   return 'ok'
 }
 
@@ -119,7 +136,8 @@ export function barCells(percent: number, elapsed: number | null): { kind: 'fill
   return runs
 }
 
-export const register: Register = on => {
+export const register: Register = (on, options) => {
+  const paceCfg = toPaceConfig(options)
   let timer: { cancel: () => void } | null = null
 
   on('session.start', async ($, e, next) => {
@@ -152,7 +170,7 @@ export const register: Register = on => {
     const rest = await next(e)
     const now = await $.clock.now()
     const pct = shownPercent(five, now)
-    const pace = paceOf(five, FIVE_HOURS, now)
+    const pace = paceOf(five, FIVE_HOURS, now, paceCfg)
     const elapsed = elapsedOf(five, FIVE_HOURS, now)
     const seven = limits.sevenDay
     const tail =

@@ -55,6 +55,15 @@ The bar is colored by **pace**, not by how full it is. 49% used sounds fine, but
 
 The percents come from the last API response; the countdowns tick on their own. It shows only on a subscription with usage limits.
 
+Settings, with `/config` (the defaults are the values above):
+
+```
+/config limit-band.amber_used=50%|60%|70%|off
+/config limit-band.red_used=80%|90%|95%|off
+/config limit-band.amber_pace=90%|100%|110%|off
+/config limit-band.red_pace=110%|125%|150%|off
+```
+
 Pace coloring is an idea from [PCritchfield/claude-gauges](https://github.com/PCritchfield/claude-gauges) (MIT), whose status line and session pane color plan limits the same way; this is its own implementation for the band above the prompt.
 
 It shares its row with [Cache Maxxer](https://github.com/vayaan-labs/plugins)'s band when that mod is installed (and moves under it while Cache Maxxer's detail is open); without it, it takes the row by itself.

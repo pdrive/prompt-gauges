@@ -1,6 +1,6 @@
 import { expect, mock, test } from 'claude-code/testing'
 
-import { barCells, barSvg, elapsedOf, label, PACE_COLORS, paceHint, paceOf, projectedOf, toLimits, untilReset } from '../hooks/register'
+import { barCells, barSvg, elapsedOf, label, PACE_COLORS, paceHint, paceOf, projectedOf, toLimits, toPaceConfig, untilReset } from '../hooks/register'
 
 const NOW = Date.parse('2026-10-14T20:00:00Z')
 
@@ -16,19 +16,34 @@ test('pace: projected use over the share of the window gone', async () => {
   // On pace: 30% used halfway
   expect(paceOf(at(30, 150), 5 * H, NOW)).toBe('ok')
   expect(paceHint(at(30, 150), 5 * H, NOW)).toBe('')
-  // Well past it, or 80% used whatever the clock
+  // Well past it, or 90% used whatever the clock
   expect(paceOf(at(70, 150), 5 * H, NOW)).toBe('over')
   expect(paceOf(at(90, 10), 5 * H, NOW)).toBe('over')
   expect(paceOf(at(89, 10), 5 * H, NOW)).toBe('ahead')
   // Amber from 60% used even behind pace: 60% with 30m left is heading for 67%
   expect(paceOf(at(59, 30), 5 * H, NOW)).toBe('ok')
   expect(paceOf(at(60, 30), 5 * H, NOW)).toBe('ahead')
-  // Too early to say before a tenth of the window: only the 80% backstop
+  // Too early to say before a tenth of the window: only the used floors
   expect(projectedOf(at(20, 290), 5 * H, NOW)).toBe(null)
   expect(paceOf(at(20, 290), 5 * H, NOW)).toBe('ok')
   // Past its reset or with no reset time: no pace, no tick
   expect(paceOf(at(90, -1), 5 * H, NOW)).toBe('ok')
   expect(elapsedOf({ percent: 10, resetsAt: null }, 5 * H, NOW)).toBe(null)
+})
+
+test('settings move or turn off each threshold', async () => {
+  expect(toPaceConfig({})).toEqual({ amberUsed: 60, redUsed: 90, amberPace: 100, redPace: 125 })
+  const cfg = toPaceConfig({ amber_used: 'off', red_used: '80%', amber_pace: '110%', red_pace: 'off' })
+  expect(cfg).toEqual({ amberUsed: null, redUsed: 80, amberPace: 110, redPace: null })
+  // 49% heading for 119%: still amber with amber at a projected 110%
+  expect(paceOf(at(49, 176), 5 * H, NOW, cfg)).toBe('ahead')
+  // 70% halfway heads for 140%: red by default, only amber with the pace red off
+  expect(paceOf(at(70, 150), 5 * H, NOW, cfg)).toBe('ahead')
+  expect(paceOf(at(80, 10), 5 * H, NOW, cfg)).toBe('over')
+  // 65% with 30m left heads for 72%: amber by the 60% floor, green with it off
+  expect(paceOf(at(65, 30), 5 * H, NOW)).toBe('ahead')
+  expect(paceOf(at(65, 30), 5 * H, NOW, cfg)).toBe('ok')
+  expect(toPaceConfig({ red_used: '42%' }).redUsed).toBe(90)
 })
 
 test('the bar shows the fill in its pace color and a tick at the clock', async () => {
