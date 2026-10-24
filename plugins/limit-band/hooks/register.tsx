@@ -5,7 +5,7 @@ import type { Limits, Pace, PaceConfig, Window } from '../types'
 
 // A thin line above the prompt for the 5-hour usage window, with its percent and time to reset, and
 // the 7-day window beside it. The bar is colored by pace, not by how full it is: where the window
-// would end at the rate used so far (used % over the share of the window gone). Green on pace, amber
+// would end at the rate used so far (used % over the share of the window gone). Green on pace, orange
 // when it would run out before the reset or once 60% is used, red well past that or once 90% is used
 // (each a setting); `↑117%` says where it is heading, and a tick on the bar stands where the window's clock is.
 // The percents come from the last API response; the countdowns tick here. It sits on the same row
@@ -24,10 +24,12 @@ const TRACK = '#8888884d'
 
 const HOUR = 3_600_000
 const FIVE_HOURS = 5 * HOUR
+const SEVEN_DAYS = 7 * 24 * HOUR
 const TICK = '#bdbdbd'
-export const PACE_COLORS: Record<Pace, string> = { ok: '#3cc43c', ahead: '#e0a020', over: '#e8453c' }
+// Orange and red far enough apart to tell without the other beside them
+export const PACE_COLORS: Record<Pace, string> = { ok: '#3cc43c', ahead: '#ff9800', over: '#e53935' }
 
-export const DEFAULT_PACE: PaceConfig = { amberUsed: 60, redUsed: 90, amberPace: 100, redPace: 125 }
+export const DEFAULT_PACE: PaceConfig = { orangeUsed: 60, redUsed: 90, orangePace: 100, redPace: 125 }
 
 const pick = (v: unknown, allowed: readonly string[], fallback: string): string =>
   typeof v === 'string' && allowed.includes(v) ? v : fallback
@@ -36,9 +38,9 @@ const pctOrOff = (s: string) => (s === 'off' ? null : parseInt(s, 10))
 // "60%" -> 60, "off" -> null; a value outside a picker's options falls back to its default.
 export function toPaceConfig(options: PluginOptions): PaceConfig {
   return {
-    amberUsed: pctOrOff(pick(options.amber_used, ['50%', '60%', '70%', 'off'], '60%')),
+    orangeUsed: pctOrOff(pick(options.orange_used, ['50%', '60%', '70%', 'off'], '60%')),
     redUsed: pctOrOff(pick(options.red_used, ['80%', '90%', '95%', 'off'], '90%')),
-    amberPace: pctOrOff(pick(options.amber_pace, ['90%', '100%', '110%', 'off'], '100%')),
+    orangePace: pctOrOff(pick(options.orange_pace, ['90%', '100%', '110%', 'off'], '100%')),
     redPace: pctOrOff(pick(options.red_pace, ['110%', '125%', '150%', 'off'], '125%')),
   }
 }
@@ -66,14 +68,14 @@ export function projectedOf(w: Window, lengthMs: number, now: number): number | 
   return elapsed === null || elapsed < 0.1 ? null : (w.percent / elapsed)
 }
 
-// Amber from a projected 100% or once 60% is used, red from 125% or once 90% is used (the defaults):
+// Orange from a projected 100% or once 60% is used, red from 125% or once 90% is used (the defaults):
 // the used floors hold whatever the pace, since near the top little is left either way.
 export function paceOf(w: Window, lengthMs: number, now: number, cfg: PaceConfig = DEFAULT_PACE): Pace {
   if (w.resetsAt !== null && w.resetsAt <= now) return 'ok'
   const projected = projectedOf(w, lengthMs, now)
   const reaches = (value: number | null, at: number | null) => value !== null && at !== null && value >= at
   if (reaches(w.percent, cfg.redUsed) || reaches(projected, cfg.redPace)) return 'over'
-  if (reaches(w.percent, cfg.amberUsed) || reaches(projected, cfg.amberPace)) return 'ahead'
+  if (reaches(w.percent, cfg.orangeUsed) || reaches(projected, cfg.orangePace)) return 'ahead'
   return 'ok'
 }
 
@@ -82,6 +84,9 @@ export function paceHint(w: Window, lengthMs: number, now: number): string {
   const projected = projectedOf(w, lengthMs, now)
   return projected !== null && projected >= 100 ? ` ↑${Math.round(projected)}%` : ''
 }
+
+// The 7-day text: "33% (4d 18h)", with " ↑103%" after it once it is ahead of pace.
+export const sevenLabel = (w: Window, now: number) => `${label(w, now)}${paceHint(w, SEVEN_DAYS, now)}`
 
 // "2h 14m", "3d 4h", "12m"; null when the window has no reset time.
 export function untilReset(resetsAt: number | null, now: number): string | null {
@@ -172,10 +177,11 @@ export const register: Register = (on, options) => {
     const pace = paceOf(five, FIVE_HOURS, now, paceCfg)
     const elapsed = elapsedOf(five, FIVE_HOURS, now)
     const seven = limits.sevenDay
-    const tail =
-      `${label(five, now)}${paceHint(five, FIVE_HOURS, now)}` +
-      // The 7-day window without its own hint: the row beside Cache Maxxer has room for one
-      (seven ? ` · 7d ${label(seven, now)}` : '')
+    const fiveText = `${label(five, now)}${paceHint(five, FIVE_HOURS, now)}`
+    const sevenPace = seven ? paceOf(seven, SEVEN_DAYS, now, paceCfg) : 'ok'
+    const sevenText = seven ? sevenLabel(seven, now) : null
+    // The 7-day part takes its pace color once it is ahead; on pace it stays dim like the rest.
+    const sevenColor = sevenPace === 'ok' ? undefined : PACE_COLORS[sevenPace]
     // Beside Cache Maxxer's band on one row, except when its detail is open: then under it, full width.
     const isUnder = !(await read($, cmHidden)) && (await read($, cmExpanded))
     const row = { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', columnGap: 2 } as const
@@ -196,7 +202,12 @@ export const register: Register = (on, options) => {
               width={isUnder ? BAR_PX * 2 : BAR_PX}
               height={8}
             />
-            <Text key="text" dimColor>{tail}</Text>
+            {/* One Text with the runs nested: as sibling Texts the desktop spaces them apart */}
+            <Text key="text" dimColor>
+              {fiveText}
+              {sevenText !== null && ' · 7d '}
+              {sevenText !== null && (sevenColor ? <Text color={sevenColor}>{sevenText}</Text> : sevenText)}
+            </Text>
           </Box>
         </Box>
       )
@@ -213,7 +224,11 @@ export const register: Register = (on, options) => {
             : r.kind === 'tick' ? <Text key={`b${i}`} color={TICK}>{r.text}</Text>
             : <Text key={`b${i}`} dimColor>{r.text}</Text>,
           )}
-          <Text key="text" dimColor>{` ${tail}`}</Text>
+          <Text key="text" dimColor>
+            {` ${fiveText}`}
+            {sevenText !== null && ' · 7d '}
+            {sevenText !== null && (sevenColor ? <Text color={sevenColor}>{sevenText}</Text> : sevenText)}
+          </Text>
         </Box>
       </Box>
     )

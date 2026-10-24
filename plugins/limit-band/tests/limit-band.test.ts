@@ -1,6 +1,6 @@
 import { expect, mock, test } from 'claude-code/testing'
 
-import { barCells, barSvg, elapsedOf, label, PACE_COLORS, paceHint, paceOf, projectedOf, toLimits, toPaceConfig, untilReset } from '../hooks/register'
+import { barCells, barSvg, elapsedOf, label, PACE_COLORS, paceHint, paceOf, projectedOf, sevenLabel, toLimits, toPaceConfig, untilReset } from '../hooks/register'
 
 const NOW = Date.parse('2026-10-14T20:00:00Z')
 
@@ -20,7 +20,7 @@ test('pace: projected use over the share of the window gone', async () => {
   expect(paceOf(at(70, 150), 5 * H, NOW)).toBe('over')
   expect(paceOf(at(90, 10), 5 * H, NOW)).toBe('over')
   expect(paceOf(at(89, 10), 5 * H, NOW)).toBe('ahead')
-  // Amber from 60% used even behind pace: 60% with 30m left is heading for 67%
+  // Orange from 60% used even behind pace: 60% with 30m left is heading for 67%
   expect(paceOf(at(59, 30), 5 * H, NOW)).toBe('ok')
   expect(paceOf(at(60, 30), 5 * H, NOW)).toBe('ahead')
   // Too early to say before a tenth of the window: only the used floors
@@ -31,16 +31,25 @@ test('pace: projected use over the share of the window gone', async () => {
   expect(elapsedOf({ percent: 10, resetsAt: null }, 5 * H, NOW)).toBe(null)
 })
 
+test('the 7-day text keeps its reset time and adds its projection when ahead', async () => {
+  const D = 24 * 60
+  // 33% with 4d 18h left of 7d: 32% gone, heading for 103%
+  expect(sevenLabel(at(33, 4 * D + 18 * 60), NOW)).toBe('33% (4d 18h) ↑103%')
+  expect(paceOf(at(33, 4 * D + 18 * 60), 7 * 24 * H, NOW)).toBe('ahead')
+  // On pace: no hint
+  expect(sevenLabel(at(20, 4 * D), NOW)).toBe('20% (4d 0h)')
+})
+
 test('settings move or turn off each threshold', async () => {
-  expect(toPaceConfig({})).toEqual({ amberUsed: 60, redUsed: 90, amberPace: 100, redPace: 125 })
-  const cfg = toPaceConfig({ amber_used: 'off', red_used: '80%', amber_pace: '110%', red_pace: 'off' })
-  expect(cfg).toEqual({ amberUsed: null, redUsed: 80, amberPace: 110, redPace: null })
-  // 49% heading for 119%: still amber with amber at a projected 110%
+  expect(toPaceConfig({})).toEqual({ orangeUsed: 60, redUsed: 90, orangePace: 100, redPace: 125 })
+  const cfg = toPaceConfig({ orange_used: 'off', red_used: '80%', orange_pace: '110%', red_pace: 'off' })
+  expect(cfg).toEqual({ orangeUsed: null, redUsed: 80, orangePace: 110, redPace: null })
+  // 49% heading for 119%: still orange with orange at a projected 110%
   expect(paceOf(at(49, 176), 5 * H, NOW, cfg)).toBe('ahead')
-  // 70% halfway heads for 140%: red by default, only amber with the pace red off
+  // 70% halfway heads for 140%: red by default, only orange with the pace red off
   expect(paceOf(at(70, 150), 5 * H, NOW, cfg)).toBe('ahead')
   expect(paceOf(at(80, 10), 5 * H, NOW, cfg)).toBe('over')
-  // 65% with 30m left heads for 72%: amber by the 60% floor, green with it off
+  // 65% with 30m left heads for 72%: orange by the 60% floor, green with it off
   expect(paceOf(at(65, 30), 5 * H, NOW)).toBe('ahead')
   expect(paceOf(at(65, 30), 5 * H, NOW, cfg)).toBe('ok')
   expect(toPaceConfig({ red_used: '42%' }).redUsed).toBe(90)

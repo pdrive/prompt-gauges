@@ -3,7 +3,7 @@ export type Limits = { fiveHour: Window | null; sevenDay: Window | null }
 // ok: on pace; ahead: would run out before the reset, or 60% used; over: well past that, or 90% used (the defaults)
 export type Pace = 'ok' | 'ahead' | 'over'
 // The userConfig thresholds in percent; null is off
-export type PaceConfig = { amberUsed: number | null; redUsed: number | null; amberPace: number | null; redPace: number | null }
+export type PaceConfig = { orangeUsed: number | null; redUsed: number | null; orangePace: number | null; redPace: number | null }
 
 declare module 'claude-code' {
   interface PluginState {
