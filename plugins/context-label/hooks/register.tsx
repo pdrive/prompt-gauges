@@ -9,7 +9,7 @@ import type { Config, Ctx, Level } from '../types'
 // The slot is drawn as a tree of our own: the desktop app ignores a rewritten `modes` list but draws a tree.
 //
 // Levels: green; yellow from where a turn gets dear (400k, or 100k on Haiku, whose price per token
-// goes up 5x past it; the other models price the whole window the same); orange and red as a share
+// goes up 5x past it; the other Claude 4.6-and-later models price the full window the same); orange and red as a share
 // of the way to auto-compaction (70% and 90%), which is what can break a chat.
 
 const ctxAtom = atom({ plugin: 'context-label', key: 'ctx' } as const, null)
