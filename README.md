@@ -49,7 +49,7 @@ The bar is colored by **pace**, not by how full it is. 49% used sounds fine, but
 - **projected** = used % ÷ the share of the window gone by;
 - **green** while on pace, **orange** from a projected 100%;
 - near the top the used share wins whatever the pace: **orange** from 60% used, **red** from 90% (red is kept for that; red by pace is a setting, off by default);
-- in the text, the 5-hour percent is colored by how full it is (green, orange from 60%, red from 90%) and each `↑` hint by its window's pace; the times and the 7-day percent stay dim;
+- in the text, the 5-hour percent is colored by how full it is (green, orange from 60%, red from 90%) and each hint's `↑` by its window's pace; the numbers after it, the times and the 7-day percent stay dim;
 - `↑119%` shows the projection whenever it is 100% or more, for the 7-day window too;
 - the **tick** on the bar marks where the window's clock is: a fill past the tick is ahead of pace;
 - no projection in the first tenth of a window, when it would be noise; only the used floors apply then.

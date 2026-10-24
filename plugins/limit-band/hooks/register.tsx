@@ -117,7 +117,7 @@ export function fillOf(percent: number, cfg: PaceConfig = DEFAULT_PACE): Pace {
 }
 
 // The band's text as runs, each with its color or none (dim): the 5-hour percent by how full it is,
-// each `↑` hint by its window's pace, the times and the 7-day percent dim.
+// each hint's `↑` alone by its window's pace (its number dim), the times and the 7-day percent dim.
 // "67% (2h 21m) ↑126% · 7d 33% (4d 17h) ↑102%"
 export function textRuns(five: Window, seven: Window | null, now: number, cfg: PaceConfig = DEFAULT_PACE): { text: string; color?: string }[] {
   const left = (w: Window) => {
@@ -129,12 +129,14 @@ export function textRuns(five: Window, seven: Window | null, now: number, cfg: P
     { text: fmtPct(fivePct), color: PACE_COLORS[fillOf(fivePct, cfg)] },
     { text: left(five) },
   ]
+  // " ↑126%" as " ", "↑" in the pace color, "126%" dim
+  const hint = (text: string, pace: Pace) => runs.push({ text: ' ' }, { text: '↑', color: PACE_COLORS[pace] }, { text: text.slice(2) })
   const fiveHint = paceHint(five, FIVE_HOURS, now)
-  if (fiveHint) runs.push({ text: fiveHint, color: PACE_COLORS[paceOf(five, FIVE_HOURS, now, cfg)] })
+  if (fiveHint) hint(fiveHint, paceOf(five, FIVE_HOURS, now, cfg))
   if (seven) {
     runs.push({ text: ` · 7d ${fmtPct(shownPercent(seven, now))}${left(seven)}` })
     const sevenHint = paceHint(seven, SEVEN_DAYS, now)
-    if (sevenHint) runs.push({ text: sevenHint, color: PACE_COLORS[paceOf(seven, SEVEN_DAYS, now, cfg)] })
+    if (sevenHint) hint(sevenHint, paceOf(seven, SEVEN_DAYS, now, cfg))
   }
   return runs
 }

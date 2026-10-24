@@ -32,16 +32,20 @@ test('pace: projected use over the share of the window gone', async () => {
   expect(elapsedOf({ percent: 10, resetsAt: null }, 5 * H, NOW)).toBe(null)
 })
 
-test('the text colors the 5-hour percent by fill and each hint by pace, the rest dim', async () => {
+test('the text colors the 5-hour percent by fill and each hint arrow by pace, the rest dim', async () => {
   const D = 24 * 60
   const runs = textRuns(at(67, 141), at(33, 4 * D + 17 * 60), NOW)
   expect(runs.map(r => r.text).join('')).toBe('67% (2h 21m) ↑126% · 7d 33% (4d 17h) ↑101%')
   expect(runs).toEqual([
     { text: '67%', color: PACE_COLORS.ahead },
     { text: ' (2h 21m)' },
-    { text: ' ↑126%', color: PACE_COLORS.ahead },
+    { text: ' ' },
+    { text: '↑', color: PACE_COLORS.ahead },
+    { text: '126%' },
     { text: ' · 7d 33% (4d 17h)' },
-    { text: ' ↑101%', color: PACE_COLORS.ahead },
+    { text: ' ' },
+    { text: '↑', color: PACE_COLORS.ahead },
+    { text: '101%' },
   ])
   // By fill alone: green below 60%, orange from 60%, red from 90%
   expect([59, 60, 89, 90].map(p => fillOf(p))).toEqual(['ok', 'ahead', 'ahead', 'over'])
