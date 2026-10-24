@@ -1,6 +1,6 @@
 import { expect, mock, test } from 'claude-code/testing'
 
-import { barCells, barSvg, barTitle, elapsedOf, fillOf, label, PACE_COLORS, paceHint, paceOf, projectedOf, textRuns, toLimits, toPaceConfig, untilReset } from '../hooks/register'
+import { barCells, barSvg, barTitle, elapsedOf, fillOf, hintPaceOf, label, PACE_COLORS, paceHint, paceOf, projectedOf, textRuns, toLimits, toPaceConfig, untilReset } from '../hooks/register'
 
 const NOW = Date.parse('2026-10-14T20:00:00Z')
 
@@ -68,6 +68,16 @@ test('settings move or turn off each threshold', async () => {
   // Any whole number in range; out of range or no number: the default
   expect(toPaceConfig({ orange_used: '65', red_used: 95 })).toMatchObject({ orangeUsed: 65, redUsed: 95 })
   expect(toPaceConfig({ red_used: 150, orange_pace: 'soon' })).toMatchObject({ redUsed: 90, orangePace: 100 })
+})
+
+test('the arrow follows the pace settings: shown from orange_pace, red from red_pace', async () => {
+  // 49% heading for 119%
+  expect(paceHint(at(49, 176), 5 * H, NOW, toPaceConfig({ orange_pace: 120 }))).toBe('')
+  expect(paceHint(at(49, 176), 5 * H, NOW, toPaceConfig({ orange_pace: 110 }))).toBe(' ↑119%')
+  expect(hintPaceOf(at(49, 176), 5 * H, NOW, toPaceConfig({ red_pace: 115 }))).toBe('over')
+  expect(paceHint(at(49, 176), 5 * H, NOW, toPaceConfig({ orange_pace: 0 }))).toBe('')
+  // The used floors do not color the arrow: 65% used on pace has no arrow
+  expect(paceHint(at(65, 30), 5 * H, NOW)).toBe('')
 })
 
 test('hovering the bar says what it shows', async () => {

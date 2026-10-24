@@ -83,10 +83,20 @@ export function paceOf(w: Window, lengthMs: number, now: number, cfg: PaceConfig
   return 'ok'
 }
 
-// " ↑117%" when the window is heading past its limit, else ''.
-export function paceHint(w: Window, lengthMs: number, now: number): string {
+// The pace alone, without the used floors: orange from `orangePace` projected, red from `redPace`;
+// null while the projection reaches neither (or both are off). The `↑` hint and its color follow it.
+export function hintPaceOf(w: Window, lengthMs: number, now: number, cfg: PaceConfig = DEFAULT_PACE): Pace | null {
   const projected = projectedOf(w, lengthMs, now)
-  return projected !== null && projected >= 100 ? ` ↑${Math.round(projected)}%` : ''
+  if (projected === null) return null
+  if (cfg.redPace !== null && projected >= cfg.redPace) return 'over'
+  if (cfg.orangePace !== null && projected >= cfg.orangePace) return 'ahead'
+  return null
+}
+
+// " ↑117%" once the projection reaches the orange (or red) pace setting, else ''.
+export function paceHint(w: Window, lengthMs: number, now: number, cfg: PaceConfig = DEFAULT_PACE): string {
+  const projected = projectedOf(w, lengthMs, now)
+  return projected !== null && hintPaceOf(w, lengthMs, now, cfg) !== null ? ` ↑${Math.round(projected)}%` : ''
 }
 
 // "2h 14m", "3d 4h", "12m"; null when the window has no reset time.
@@ -135,12 +145,12 @@ export function textRuns(five: Window, seven: Window | null, now: number, cfg: P
   ]
   // " ↑126%" as " ", "↑" in the pace color, "126%" dim
   const hint = (text: string, pace: Pace) => runs.push({ text: ' ' }, { text: '↑', color: PACE_COLORS[pace] }, { text: text.slice(2) })
-  const fiveHint = paceHint(five, FIVE_HOURS, now)
-  if (fiveHint) hint(fiveHint, paceOf(five, FIVE_HOURS, now, cfg))
+  const fiveHint = paceHint(five, FIVE_HOURS, now, cfg)
+  if (fiveHint) hint(fiveHint, hintPaceOf(five, FIVE_HOURS, now, cfg) ?? 'ahead')
   if (seven) {
     runs.push({ text: ` · 7d ${fmtPct(shownPercent(seven, now))}${left(seven)}` })
-    const sevenHint = paceHint(seven, SEVEN_DAYS, now)
-    if (sevenHint) hint(sevenHint, paceOf(seven, SEVEN_DAYS, now, cfg))
+    const sevenHint = paceHint(seven, SEVEN_DAYS, now, cfg)
+    if (sevenHint) hint(sevenHint, hintPaceOf(seven, SEVEN_DAYS, now, cfg) ?? 'ahead')
   }
   return runs
 }
@@ -259,7 +269,7 @@ export const register: Register = (on, options) => {
               height={8}
             />
             {/* One Text with the runs nested: as sibling Texts the desktop spaces them apart */}
-            <Text key="text" dimColor>
+            <Text key="text" dimColor tabular>
               {runs.map((r, i) => (r.color ? <Text key={`t${i}`} color={r.color}>{r.text}</Text> : r.text))}
             </Text>
           </Box>
@@ -278,7 +288,7 @@ export const register: Register = (on, options) => {
             : r.kind === 'tick' ? <Text key={`b${i}`} color={TICK}>{r.text}</Text>
             : <Text key={`b${i}`} dimColor>{r.text}</Text>,
           )}
-          <Text key="text" dimColor>
+          <Text key="text" dimColor tabular>
             {' '}
             {runs.map((r, i) => (r.color ? <Text key={`t${i}`} color={r.color}>{r.text}</Text> : r.text))}
           </Text>
