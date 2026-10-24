@@ -19,7 +19,7 @@ const cmExpanded = atom({ plugin: 'cache-maxxer', key: 'expanded' } as const, fa
 
 const TICK_MS = 30_000
 const BAR_CELLS = 20
-const BAR_PX = 160
+const BAR_PX = 120
 const TRACK = '#8888884d'
 
 const HOUR = 3_600_000
@@ -60,10 +60,10 @@ export function paceOf(w: Window, lengthMs: number, now: number): Pace {
   return 'ok'
 }
 
-// "  ↑117%" when the window is heading past its limit, else ''.
+// " ↑117%" when the window is heading past its limit, else ''.
 export function paceHint(w: Window, lengthMs: number, now: number): string {
   const projected = projectedOf(w, lengthMs, now)
-  return projected !== null && projected >= 100 ? `  ↑${Math.round(projected)}%` : ''
+  return projected !== null && projected >= 100 ? ` ↑${Math.round(projected)}%` : ''
 }
 
 // "2h 14m", "3d 4h", "12m"; null when the window has no reset time.
@@ -156,7 +156,7 @@ export const register: Register = on => {
     const seven = limits.sevenDay
     const tail =
       `${label(five, now)}${paceHint(five, FIVE_HOURS, now)}` +
-      (seven ? `  ·  7d ${label(seven, now)}${paceHint(seven, SEVEN_DAYS, now)}` : '')
+      (seven ? ` · 7d ${label(seven, now)}${paceHint(seven, SEVEN_DAYS, now)}` : '')
     // Beside Cache Maxxer's band on one row, except when its detail is open: then under it, full width.
     const isUnder = !(await read($, cmHidden)) && (await read($, cmExpanded))
     const row = { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', columnGap: 2 } as const

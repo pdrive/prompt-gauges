@@ -12,7 +12,7 @@ test('pace: projected use over the share of the window gone', async () => {
   expect(Math.round(elapsedOf(at(49, 176), 5 * H, NOW)! * 1000)).toBe(413)
   expect(Math.round(projectedOf(at(49, 176), 5 * H, NOW)!)).toBe(119)
   expect(paceOf(at(49, 176), 5 * H, NOW)).toBe('ahead')
-  expect(paceHint(at(49, 176), 5 * H, NOW)).toBe('  ↑119%')
+  expect(paceHint(at(49, 176), 5 * H, NOW)).toBe(' ↑119%')
   // On pace: 30% used halfway
   expect(paceOf(at(30, 150), 5 * H, NOW)).toBe('ok')
   expect(paceHint(at(30, 150), 5 * H, NOW)).toBe('')
@@ -78,7 +78,7 @@ test('the band draws on terminal and desktop once a reading arrives', async ($, 
       props: { hasSurvey: false, isWorking: false, maxRows: 20, bodyColumns: 100 } as never,
     })
     expect(await ui.find({ key: 'limit-band' })).toBeDefined()
-    expect(await ui.find({ type: 'Text', text: /42% \(1h 30m\)  ·  7d 18% \(2d 2h\)/ })).toBeDefined()
+    expect(await ui.find({ type: 'Text', text: /42% \(1h 30m\) · 7d 18% \(2d 2h\)/ })).toBeDefined()
     await ui.unmount()
   }
 })

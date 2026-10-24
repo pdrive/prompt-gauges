@@ -41,7 +41,7 @@ Settings, with `/config`:
 A thin line above the prompt for the 5-hour usage window, with its percent and time to reset, and the 7-day window beside it:
 
 ```
-5h ━━━━━━━━┃━━──────────  49% (2h 56m)  ↑119%  ·  7d 31% (4d 18h)
+5h ━━━━━━━━┃━━──────────  49% (2h 56m) ↑119% · 7d 31% (4d 18h)
 ```
 
 The bar is colored by **pace**, not by how full it is. 49% used sounds fine, but if only 41% of the window has gone by, you are on course to hit the limit before it resets. So:
