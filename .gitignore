@@ -1,2 +1,5 @@
 # Written by Claude Code when a mod loads
 plugins/*/.claude-plugin/types/
+
+# Session handoff, local only
+docs/HANDOFF.md
