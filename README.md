@@ -92,10 +92,33 @@ claude plugin install limit-band --marketplace pdrive/prompt-gauges
 
 In the desktop app: click **+** next to the prompt box, then **Plugins**, **Add marketplace** with `pdrive/prompt-gauges`, then **Add plugin**.
 
-## Notes
+## Working on the mods
 
-- In the desktop app the footer slot is text only and cut at a fixed width, which is why context-label's bar is made of characters and kept short.
-- Each mod has tests: `claude plugin test plugins/context-label`.
+Each mod is a Claude Code hooks module under `plugins/<mod>/`: `.claude-plugin/plugin.json` (the manifest and its `/config` settings), `hooks/register.tsx` (the module), `types/index.d.ts` (its state contract and shared types) and `tests/*.test.ts`. `.claude-plugin/marketplace.json` lists them.
+
+To run your changes, add a local clone as a marketplace and install from it; Claude Code then reads the mods from the clone, and an edit plus `/reload-plugins` reloads them:
+
+```
+claude plugin marketplace add <path to your clone>
+claude plugin install context-label@prompt-gauges
+claude plugin install limit-band@prompt-gauges
+```
+
+Before a commit:
+
+1. `claude plugin validate .` and `claude plugin validate plugins/<mod>`.
+2. `claude plugin test plugins/<mod>` for each mod changed, with the tests updated for the new behaviour.
+3. Bump the mod's `version` in its `plugin.json` for a change people should get.
+4. Keep this README in step: what each mod shows, its colors and thresholds, its settings.
+
+Limits of the desktop app worth knowing:
+
+- **The prompt footer (context-label)** draws text only: an `Svg` is dropped, a `Button` loses the colors, sibling `Text`s are spaced apart (nest them in one `Text`), and the slot is cut at a fixed width. Keep it short.
+- **The band above the prompt (limit-band)** shares one row with Cache Maxxer's band, with little room to spare: anything added to its text can push Cache Maxxer onto two lines. The shared row needs limit-band listed before Cache Maxxer in `enabledPlugins` (a reinstall appends it at the end and splits the row).
+- **No `isInteractive` on the bar's `Svg`.** The interactive frame a `<title>` tooltip needs reloads on every redraw, so the bar flashes with every countdown tick.
+- **A number that ticks** (a countdown, a percentage) wants `tabular` on its `Text`, so it doesn't change width.
+
+Keep docs, comments and commit messages about the mods themselves, and credit ideas taken from other projects here.
 
 ## License
 

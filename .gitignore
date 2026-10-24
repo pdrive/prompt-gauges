@@ -3,3 +3,7 @@ plugins/*/.claude-plugin/types/
 
 # Session handoff, local only
 docs/HANDOFF.md
+
+# Local agent instructions: kept out of the public repo (the rules for contributors are in the README)
+AGENTS.md
+CLAUDE.md
