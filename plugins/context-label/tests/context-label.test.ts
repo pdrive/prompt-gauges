@@ -24,24 +24,28 @@ test('the bar fills a cell at 20, 45, 70 and 95% of the window', () => {
   expect(barText(at(1_000_000))).toBe('■■■■')
 })
 
-test('levels by default: yellow at 400k (100k on Haiku), orange and red at 70 and 90% of auto-compact', () => {
+test('levels by default: yellow at half the window (100k on Haiku), orange and red at 72 and 93% of auto-compact', () => {
   const cfg = toConfig({})
   const opus = (n: number) => levelOf(at(n), 967_000, 'claude-opus-5-5', cfg)
-  expect([399_000, 400_000, 676_000, 677_000, 870_000, 871_000].map(opus)).toEqual(['green', 'yellow', 'yellow', 'orange', 'orange', 'red'])
+  // 72% of 967k is 696k, 93% is 899k
+  expect([499_000, 500_000, 696_000, 697_000, 899_000, 900_000].map(opus)).toEqual(['green', 'yellow', 'yellow', 'orange', 'orange', 'red'])
   const haiku = (n: number) => levelOf(at(n), 967_000, 'claude-haiku-5-5', cfg)
   expect([99_000, 100_000].map(haiku)).toEqual(['green', 'yellow'])
+  expect(levelOf(at(100_000), 967_000, 'claude-haiku-5-5', toConfig({ haiku_price_step: false }))).toBe('green')
   // Auto-compact off: orange and red measure the whole window
-  expect(levelOf(at(800_000), null, 'claude-opus-5-5', cfg)).toBe('orange')
-  expect(levelOf(at(900_000), null, 'claude-opus-5-5', cfg)).toBe('red')
+  expect(levelOf(at(720_000), null, 'claude-opus-5-5', cfg)).toBe('orange')
+  expect(levelOf(at(930_000), null, 'claude-opus-5-5', cfg)).toBe('red')
 })
 
-test('settings move or turn off each level', () => {
-  const cfg = toConfig({ yellow_at: '200k', orange_at: 'off', red_at: '85%', show: 'bar' })
-  expect(cfg).toEqual({ yellowAt: 200_000, orangeAt: null, redAt: 0.85, show: 'bar' })
-  expect(levelOf(at(800_000), 967_000, 'claude-opus-5-5', cfg)).toBe('yellow')
-  expect(levelOf(at(822_000), 967_000, 'claude-opus-5-5', cfg)).toBe('red')
-  // A value outside the picker falls back to its default
-  expect(toConfig({ red_at: '50%' }).redAt).toBe(0.9)
+test('settings take any percent from 0 to 100, decimals with a dot or a comma', () => {
+  expect(toConfig({ yellow_at: 40, orange_at: '75,5', red_at: '95%', show: 'bar' })).toEqual({ yellowAt: 0.4, haikuStep: true, orangeAt: 0.755, redAt: 0.95, show: 'bar' })
+  // 0 or "off" turns a level off; out of range or no number falls back to the default
+  expect(toConfig({ orange_at: 0, red_at: 'off' })).toMatchObject({ orangeAt: null, redAt: null })
+  expect(toConfig({ red_at: 150, orange_at: 'lots' })).toMatchObject({ redAt: 0.93, orangeAt: 0.72 })
+  // A lower level set above a higher one never shows: red wins
+  const crossed = toConfig({ orange_at: 95, red_at: 80 })
+  expect(levelOf(at(800_000), 967_000, 'claude-opus-5-5', crossed)).toBe('red')
+  expect(levelOf(at(760_000), 967_000, 'claude-opus-5-5', crossed)).toBe('yellow')
 })
 
 test('the footer draws on terminal and desktop once a reading arrives', async ($, on) => {

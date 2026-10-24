@@ -19,7 +19,7 @@ const cmExpanded = atom({ plugin: 'cache-maxxer', key: 'expanded' } as const, fa
 
 const TICK_MS = 30_000
 const BAR_CELLS = 20
-const BAR_PX = 70
+const BAR_PX = 80
 const TRACK = '#8888884d'
 
 const HOUR = 3_600_000
@@ -31,17 +31,21 @@ export const PACE_COLORS: Record<Pace, string> = { ok: '#3cc43c', ahead: '#ff980
 
 export const DEFAULT_PACE: PaceConfig = { orangeUsed: 60, redUsed: 90, orangePace: 100, redPace: null }
 
-const pick = (v: unknown, allowed: readonly string[], fallback: string): string =>
-  typeof v === 'string' && allowed.includes(v) ? v : fallback
-const pctOrOff = (s: string) => (s === 'off' ? null : parseInt(s, 10))
+// A percent setting: 60 -> 60, "62,5" or "62.5%" -> 62.5, 0 or "off" -> null (off); a value outside
+// 0 to max, or no number at all, falls back to the default.
+export function toPct(v: unknown, fallback: number | null, max: number): number | null {
+  const n = typeof v === 'number' ? v : typeof v === 'string' ? (v.trim() === 'off' ? 0 : parseFloat(v.replace(',', '.'))) : NaN
+  const pct = Number.isFinite(n) && n >= 0 && n <= max ? n : (fallback ?? 0)
+  return pct === 0 ? null : pct
+}
 
-// "60%" -> 60, "off" -> null; a value outside a picker's options falls back to its default.
+// Checked from red down, so a lower level set above a higher one never shows: they cannot overlap.
 export function toPaceConfig(options: PluginOptions): PaceConfig {
   return {
-    orangeUsed: pctOrOff(pick(options.orange_used, ['50%', '60%', '70%', 'off'], '60%')),
-    redUsed: pctOrOff(pick(options.red_used, ['80%', '90%', '95%', 'off'], '90%')),
-    orangePace: pctOrOff(pick(options.orange_pace, ['90%', '100%', '110%', 'off'], '100%')),
-    redPace: pctOrOff(pick(options.red_pace, ['110%', '125%', '150%', 'off'], 'off')),
+    orangeUsed: toPct(options.orange_used, DEFAULT_PACE.orangeUsed, 100),
+    redUsed: toPct(options.red_used, DEFAULT_PACE.redUsed, 100),
+    orangePace: toPct(options.orange_pace, DEFAULT_PACE.orangePace, 500),
+    redPace: toPct(options.red_pace, DEFAULT_PACE.redPace, 500),
   }
 }
 
@@ -141,15 +145,40 @@ export function textRuns(five: Window, seven: Window | null, now: number, cfg: P
   return runs
 }
 
-// The bar is 4px high in an 8px box, so the clock's tick stands out above and below it.
-export function barSvg(percent: number, pace: Pace, elapsed: number | null, width = BAR_PX): string {
+const PACE_WORDS: Record<Pace, string> = { ok: 'on pace', ahead: 'ahead of pace', over: 'well ahead of pace' }
+
+// What the bar says, for its hover tooltip and its alt text:
+// "5-hour limit: 67% used, 53% of the window gone (resets in 2h 21m). At this rate: 126% by the reset, ahead of pace."
+export function barTitle(w: Window, now: number, cfg: PaceConfig = DEFAULT_PACE): string {
+  const pct = shownPercent(w, now)
+  const elapsed = elapsedOf(w, FIVE_HOURS, now)
+  const left = untilReset(w.resetsAt, now)
+  const projected = projectedOf(w, FIVE_HOURS, now)
+  const fill = fillOf(pct, cfg)
+  return (
+    `5-hour limit: ${fmtPct(pct)} used` +
+    (elapsed === null ? '' : `, ${fmtPct(elapsed * 100)} of the window gone`) +
+    (left && left !== 'reset' ? ` (resets in ${left})` : '') +
+    '.' +
+    (projected === null ? ' Too early in the window to project.' : ` At this rate: ${fmtPct(projected)} by the reset, ${PACE_WORDS[paceOf(w, FIVE_HOURS, now, cfg)]}.`) +
+    (fill === 'ok' ? '' : ` Past the ${fill === 'over' ? 'red' : 'orange'} line of ${fmtPct((fill === 'over' ? cfg.redUsed : cfg.orangeUsed) ?? 0)} used.`)
+  )
+}
+
+const escapeXml = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+
+// The bar is 4px high in an 8px box, so the clock's tick stands out above and below it. A transparent
+// rect over the whole box carries the hover tooltip, so it shows anywhere on the bar.
+export function barSvg(percent: number, pace: Pace, elapsed: number | null, width = BAR_PX, title = ''): string {
   const fill = Math.round((width * Math.min(Math.max(percent, 0), 100)) / 100)
   const tickX = elapsed === null ? null : Math.min(width - 2, Math.max(0, Math.round(elapsed * width) - 1))
   return (
     `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="8" viewBox="0 0 ${width} 8">` +
+    (title ? `<title>${escapeXml(title)}</title>` : '') +
     `<rect x="0" y="2" width="${width}" height="4" rx="2" fill="${TRACK}"/>` +
     (fill > 0 ? `<rect x="0" y="2" width="${fill}" height="4" rx="2" fill="${PACE_COLORS[pace]}"/>` : '') +
     (tickX === null ? '' : `<rect x="${tickX}" y="0" width="2" height="8" rx="1" fill="${TICK}"/>`) +
+    (title ? `<rect x="0" y="0" width="${width}" height="8" fill="transparent"><title>${escapeXml(title)}</title></rect>` : '') +
     `</svg>`
   )
 }
@@ -207,6 +236,7 @@ export const register: Register = (on, options) => {
     const elapsed = elapsedOf(five, FIVE_HOURS, now)
     const seven = limits.sevenDay
     const runs = textRuns(five, seven, now, paceCfg)
+    const title = barTitle(five, now, paceCfg)
     // Beside Cache Maxxer's band on one row, except when its detail is open: then under it, full width.
     const isUnder = !(await read($, cmHidden)) && (await read($, cmExpanded))
     const row = { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', columnGap: 2 } as const
@@ -222,8 +252,9 @@ export const register: Register = (on, options) => {
             <Text key="name" dimColor>5h</Text>
             <Svg
               key="bar"
-              source={barSvg(pct, pace, elapsed, isUnder ? BAR_PX * 2 : BAR_PX)}
-              alt={`5-hour limit ${fmtPct(pct)} used${elapsed === null ? '' : `, ${fmtPct(elapsed * 100)} of the window gone`}`}
+              source={barSvg(pct, pace, elapsed, isUnder ? BAR_PX * 2 : BAR_PX, title)}
+              alt={title}
+              isInteractive
               width={isUnder ? BAR_PX * 2 : BAR_PX}
               height={8}
             />

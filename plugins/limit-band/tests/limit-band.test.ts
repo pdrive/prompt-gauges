@@ -1,6 +1,6 @@
 import { expect, mock, test } from 'claude-code/testing'
 
-import { barCells, barSvg, elapsedOf, fillOf, label, PACE_COLORS, paceHint, paceOf, projectedOf, textRuns, toLimits, toPaceConfig, untilReset } from '../hooks/register'
+import { barCells, barSvg, barTitle, elapsedOf, fillOf, label, PACE_COLORS, paceHint, paceOf, projectedOf, textRuns, toLimits, toPaceConfig, untilReset } from '../hooks/register'
 
 const NOW = Date.parse('2026-10-14T20:00:00Z')
 
@@ -18,7 +18,7 @@ test('pace: projected use over the share of the window gone', async () => {
   expect(paceHint(at(30, 150), 5 * H, NOW)).toBe('')
   // Well past pace is still orange by default: red is kept for 90% used
   expect(paceOf(at(70, 150), 5 * H, NOW)).toBe('ahead')
-  expect(paceOf(at(70, 150), 5 * H, NOW, toPaceConfig({ red_pace: '125%' }))).toBe('over')
+  expect(paceOf(at(70, 150), 5 * H, NOW, toPaceConfig({ red_pace: 125 }))).toBe('over')
   expect(paceOf(at(90, 10), 5 * H, NOW)).toBe('over')
   expect(paceOf(at(89, 10), 5 * H, NOW)).toBe('ahead')
   // Orange from 60% used even behind pace: 60% with 30m left is heading for 67%
@@ -55,7 +55,7 @@ test('the text colors the 5-hour percent by fill and each hint arrow by pace, th
 
 test('settings move or turn off each threshold', async () => {
   expect(toPaceConfig({})).toEqual({ orangeUsed: 60, redUsed: 90, orangePace: 100, redPace: null })
-  const cfg = toPaceConfig({ orange_used: 'off', red_used: '80%', orange_pace: '110%', red_pace: 'off' })
+  const cfg = toPaceConfig({ orange_used: 0, red_used: 80, orange_pace: '110%', red_pace: 'off' })
   expect(cfg).toEqual({ orangeUsed: null, redUsed: 80, orangePace: 110, redPace: null })
   // 49% heading for 119%: still orange with orange at a projected 110%
   expect(paceOf(at(49, 176), 5 * H, NOW, cfg)).toBe('ahead')
@@ -65,7 +65,17 @@ test('settings move or turn off each threshold', async () => {
   // 65% with 30m left heads for 72%: orange by the 60% floor, green with it off
   expect(paceOf(at(65, 30), 5 * H, NOW)).toBe('ahead')
   expect(paceOf(at(65, 30), 5 * H, NOW, cfg)).toBe('ok')
-  expect(toPaceConfig({ red_used: '42%' }).redUsed).toBe(90)
+  // Any number in range, decimals with a dot or a comma; out of range or no number: the default
+  expect(toPaceConfig({ orange_used: '62,5', red_used: 95.5 })).toMatchObject({ orangeUsed: 62.5, redUsed: 95.5 })
+  expect(toPaceConfig({ red_used: 150, orange_pace: 'soon' })).toMatchObject({ redUsed: 90, orangePace: 100 })
+})
+
+test('hovering the bar says what it shows', async () => {
+  expect(barTitle(at(67, 141), NOW)).toBe(
+    '5-hour limit: 67% used, 53% of the window gone (resets in 2h 21m). At this rate: 126% by the reset, ahead of pace. Past the orange line of 60% used.',
+  )
+  expect(barTitle(at(10, 290), NOW)).toBe('5-hour limit: 10% used, 3% of the window gone (resets in 4h 50m). Too early in the window to project.')
+  expect(barSvg(50, 'ok', 0.5, 80, 'a < b')).toContain('<title>a &lt; b</title>')
 })
 
 test('the bar shows the fill in its pace color and a tick at the clock', async () => {

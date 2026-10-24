@@ -20,21 +20,24 @@ The context window's fill, always visible in the prompt footer beside the model 
   | Color  | From (defaults) | Why |
   |--------|-----------------|-----|
   | green  | 0 | |
-  | yellow | 400k, or 100k on Haiku | each turn resends the whole context; Haiku 5.5's price per token goes up 5x for prompts over 100k; the other Claude 4.6-and-later models price the full 1M window the same ([pricing](https://platform.claude.com/docs/en/about-claude/pricing#long-context-pricing)) |
-  | orange | 70% of the way to auto-compact | getting close |
-  | red    | 90% of the way to auto-compact | auto-compact is near, which can break a chat |
+  | yellow | half the window (500k of 1M), or 100k on Haiku | each turn resends the whole context; Haiku 5.5's price per token goes up 5x for prompts over 100k; the other Claude 4.6-and-later models price the full 1M window the same ([pricing](https://platform.claude.com/docs/en/about-claude/pricing#long-context-pricing)) |
+  | orange | 72% of the way to auto-compact (about 700k) | getting close |
+  | red    | 93% of the way to auto-compact (about 900k) | auto-compact is near, which can break a chat |
 
   Orange and red follow your session's auto-compact point (read from Claude Code, as `/context` shows it); with auto-compact off they follow the whole window.
 - **The text** is the same figures as the app's own context popover, updated after every response. A fresh or just-compacted session shows nothing until its first response.
 
-Settings, with `/config`:
+Settings, with `/config`. The thresholds take any number from 0 to 100, decimals with a dot or a comma, and 0 turns a level off:
 
 ```
-/config context-label.yellow_at=auto|100k|200k|300k|400k|500k|off
-/config context-label.orange_at=60%|70%|80%|90%|off
-/config context-label.red_at=85%|90%|95%|off
+/config context-label.yellow_at=50          # % of the window
+/config context-label.orange_at=72          # % of the way to auto-compact
+/config context-label.red_at=93             # % of the way to auto-compact
+/config context-label.haiku_price_step=true # yellow at 100k on Haiku 5.5
 /config context-label.show=bar and text|bar|text
 ```
+
+The levels are checked from red down and the first that is reached wins, so they never overlap: a lower level set above a higher one simply never shows.
 
 ## limit-band
 
@@ -52,17 +55,18 @@ The bar is colored by **pace**, not by how full it is. 49% used sounds fine, but
 - in the text, the 5-hour percent is colored by how full it is (green, orange from 60%, red from 90%) and each hint's `↑` by its window's pace; the numbers after it, the times and the 7-day percent stay dim;
 - `↑119%` shows the projection whenever it is 100% or more, for the 7-day window too;
 - the **tick** on the bar marks where the window's clock is: a fill past the tick is ahead of pace;
-- no projection in the first tenth of a window, when it would be noise; only the used floors apply then.
+- no projection in the first tenth of a window, when it would be noise; only the used floors apply then;
+- in the desktop app, **hover the bar** for the figures in words: how much is used, how much of the window has gone, where this rate ends up and which line it has crossed.
 
 The percents come from the last API response; the countdowns tick on their own. It shows only on a subscription with usage limits.
 
-Settings, with `/config` (the defaults are the values above):
+Settings, with `/config` (the defaults are the values above). Any number, decimals with a dot or a comma, 0 is off; the levels are checked from red down, so they never overlap:
 
 ```
-/config limit-band.orange_used=50%|60%|70%|off
-/config limit-band.red_used=80%|90%|95%|off
-/config limit-band.orange_pace=90%|100%|110%|off
-/config limit-band.red_pace=off|110%|125%|150%
+/config limit-band.orange_used=60    # % used, 0 to 100
+/config limit-band.red_used=90       # % used, 0 to 100
+/config limit-band.orange_pace=100   # % projected, 0 to 500
+/config limit-band.red_pace=0        # % projected, 0 to 500 (off by default)
 ```
 
 Pace coloring is an idea from [PCritchfield/claude-gauges](https://github.com/PCritchfield/claude-gauges) (MIT), whose status line and session pane color plan limits the same way; this is its own implementation for the band above the prompt.

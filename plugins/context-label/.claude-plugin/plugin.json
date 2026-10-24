@@ -1,48 +1,38 @@
 {
   "name": "context-label",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "The context window's fill (percent and used/total) always shown in the prompt footer, beside the model name",
   "types": "./types/index.d.ts",
   "userConfig": {
     "yellow_at": {
-      "type": "string",
-      "title": "Yellow from",
-      "description": "Where the bar turns yellow, in tokens. Auto is 400k, or 100k on Haiku, whose price per token goes up 5x past 100k.",
-      "options": [
-        "auto",
-        "100k",
-        "200k",
-        "300k",
-        "400k",
-        "500k",
-        "off"
-      ],
-      "default": "auto"
+      "type": "number",
+      "title": "Yellow from (% of the window)",
+      "description": "Turn yellow at this share of the context window, 0 to 100 (decimals allowed); 0 is off. Orange and red win over it when they are reached first.",
+      "min": 0,
+      "max": 100,
+      "default": 50
+    },
+    "haiku_price_step": {
+      "type": "boolean",
+      "title": "Yellow at the Haiku 100k price step",
+      "description": "On Haiku 5.5, turn yellow from 100k tokens, where its price per token goes up 5x, instead of the share above.",
+      "default": true
     },
     "orange_at": {
-      "type": "string",
-      "title": "Orange from",
-      "description": "Where the bar turns orange, as a share of the way to auto-compact (of the whole window when auto-compact is off).",
-      "options": [
-        "60%",
-        "70%",
-        "80%",
-        "90%",
-        "off"
-      ],
-      "default": "70%"
+      "type": "number",
+      "title": "Orange from (% of the way to auto-compact)",
+      "description": "Turn orange at this share of the way to auto-compact (of the whole window when auto-compact is off), 0 to 100; 0 is off. Set above red, it never shows.",
+      "min": 0,
+      "max": 100,
+      "default": 72
     },
     "red_at": {
-      "type": "string",
-      "title": "Red from",
-      "description": "Where the bar turns red, as a share of the way to auto-compact (of the whole window when auto-compact is off). On a 1M window, where auto-compact runs near the end, 90% is close to 870k.",
-      "options": [
-        "85%",
-        "90%",
-        "95%",
-        "off"
-      ],
-      "default": "90%"
+      "type": "number",
+      "title": "Red from (% of the way to auto-compact)",
+      "description": "Turn red at this share of the way to auto-compact (of the whole window when auto-compact is off), 0 to 100; 0 is off. On a 1M window with auto-compact near its end, 93% is close to 900k.",
+      "min": 0,
+      "max": 100,
+      "default": 93
     },
     "show": {
       "type": "string",

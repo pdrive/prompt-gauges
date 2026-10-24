@@ -8,16 +8,16 @@ import type { Config, Ctx, Level } from '../types'
 // Kept short: the desktop slot is cut at a fixed width. Figures come from the last API response.
 // The slot is drawn as a tree of our own: the desktop app ignores a rewritten `modes` list but draws a tree.
 //
-// Levels: green; yellow from where a turn gets dear (400k, or 100k on Haiku, whose price per token
-// goes up 5x past it; the other Claude 4.6-and-later models price the full window the same); orange and red as a share
-// of the way to auto-compaction (70% and 90%), which is what can break a chat.
+// Levels: green; yellow from half the window, where each turn (which resends it all) gets dear, or from
+// 100k on Haiku 5.5, whose price per token goes up 5x past it (the other Claude 4.6-and-later models price
+// the full window the same); orange and red as a share of the way to auto-compaction (72% and 93%),
+// which is what can break a chat. Each threshold is a setting.
 
 const ctxAtom = atom({ plugin: 'context-label', key: 'ctx' } as const, null)
 const thresholdAtom = atom({ plugin: 'context-label', key: 'threshold' } as const, null)
 const modelAtom = atom({ plugin: 'context-label', key: 'model' } as const, null)
 
 const BAR_CELLS = 4
-const AUTO_YELLOW = 400_000
 const HAIKU_YELLOW = 100_000
 
 const COLORS: Record<Level, string> = { green: '#3cc43c', yellow: '#e0c020', orange: '#f08c1e', red: '#e8453c' }
@@ -25,17 +25,21 @@ const COLORS: Record<Level, string> = { green: '#3cc43c', yellow: '#e0c020', ora
 const pick = <T extends string>(v: unknown, allowed: readonly T[], fallback: T): T =>
   typeof v === 'string' && (allowed as readonly string[]).includes(v) ? (v as T) : fallback
 
-// "400k" -> 400000, "80%" -> 0.8, "off" -> null
+// A percent setting as a share: 72 -> 0.72, "72,5" or "72.5%" -> 0.725, 0 or "off" -> null (off);
+// a value outside 0 to 100, or no number at all, falls back to the default.
+export function toShare(v: unknown, fallback: number): number | null {
+  const n = typeof v === 'number' ? v : typeof v === 'string' ? (v.trim() === 'off' ? 0 : parseFloat(v.replace(',', '.'))) : NaN
+  const pct = Number.isFinite(n) && n >= 0 && n <= 100 ? n : fallback
+  return pct === 0 ? null : pct / 100
+}
+
 export function toConfig(options: PluginOptions): Config {
-  const yellow = pick(options.yellow_at, ['auto', '100k', '200k', '300k', '400k', '500k', 'off'], 'auto')
-  const orange = pick(options.orange_at, ['60%', '70%', '80%', '90%', 'off'], '70%')
-  const red = pick(options.red_at, ['85%', '90%', '95%', 'off'], '90%')
   const show = pick(options.show, ['bar and text', 'bar', 'text'], 'bar and text')
-  const pct = (s: string) => (s === 'off' ? null : parseInt(s, 10) / 100)
   return {
-    yellowAt: yellow === 'auto' ? 'auto' : yellow === 'off' ? null : parseInt(yellow, 10) * 1_000,
-    orangeAt: pct(orange),
-    redAt: pct(red),
+    yellowAt: toShare(options.yellow_at, 50),
+    haikuStep: options.haiku_price_step !== false,
+    orangeAt: toShare(options.orange_at, 72),
+    redAt: toShare(options.red_at, 93),
     show: show === 'bar and text' ? 'both' : show,
   }
 }
@@ -59,12 +63,15 @@ export const footerText = (modes: readonly string[], c: Ctx) => [modes.join(' & 
 
 const clamp01 = (x: number) => Math.min(Math.max(x, 0), 1)
 
-// Orange and red measure the way to auto-compaction, or to the window's end with it off.
+// Orange and red measure the way to auto-compaction, or to the window's end with it off; yellow, the
+// window. Checked from red down, the first that holds wins: a lower level set above a higher one never
+// shows, so the levels cannot overlap.
 export function levelOf(c: Ctx, threshold: number | null, model: string | null, cfg: Config): Level {
   const end = threshold ?? c.window
   if (cfg.redAt !== null && c.tokens >= cfg.redAt * end) return 'red'
   if (cfg.orangeAt !== null && c.tokens >= cfg.orangeAt * end) return 'orange'
-  const yellowAt = cfg.yellowAt === 'auto' ? (model && /haiku/i.test(model) ? HAIKU_YELLOW : AUTO_YELLOW) : cfg.yellowAt
+  const isHaiku = cfg.haikuStep && model !== null && /haiku/i.test(model)
+  const yellowAt = isHaiku ? HAIKU_YELLOW : cfg.yellowAt === null ? null : cfg.yellowAt * c.window
   if (yellowAt !== null && c.tokens >= yellowAt) return 'yellow'
   return 'green'
 }

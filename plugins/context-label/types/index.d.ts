@@ -1,7 +1,8 @@
 export type Ctx = { tokens: number; window: number; percent: number }
 export type Level = 'green' | 'yellow' | 'orange' | 'red'
 // The userConfig values, read once per load
-export type Config = { yellowAt: number | 'auto' | null; orangeAt: number | null; redAt: number | null; show: 'both' | 'bar' | 'text' }
+// Shares are 0 to 1, null is off; haikuStep puts yellow at the 100k price step of Haiku 5.5
+export type Config = { yellowAt: number | null; haikuStep: boolean; orangeAt: number | null; redAt: number | null; show: 'both' | 'bar' | 'text' }
 
 declare module 'claude-code' {
   interface PluginState {

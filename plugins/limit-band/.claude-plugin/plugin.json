@@ -1,6 +1,6 @@
 {
   "name": "limit-band",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "A thin line above the prompt for the 5-hour usage limit, colored by pace (where it would end at the current rate), with its time to reset, a tick at the window's clock and the 7-day limit beside it",
   "types": "./types/index.d.ts",
   "author": {
@@ -9,52 +9,36 @@
   "license": "MIT",
   "userConfig": {
     "orange_used": {
-      "type": "string",
-      "title": "Orange once used",
-      "description": "Turn orange once this much of the 5-hour limit is used, whatever the pace.",
-      "options": [
-        "50%",
-        "60%",
-        "70%",
-        "off"
-      ],
-      "default": "60%"
+      "type": "number",
+      "title": "Orange once used (%)",
+      "description": "Turn orange once this much of the 5-hour limit is used, whatever the pace, 0 to 100 (decimals allowed); 0 is off.",
+      "min": 0,
+      "max": 100,
+      "default": 60
     },
     "red_used": {
-      "type": "string",
-      "title": "Red once used",
-      "description": "Turn red once this much of the 5-hour limit is used, whatever the pace.",
-      "options": [
-        "80%",
-        "90%",
-        "95%",
-        "off"
-      ],
-      "default": "90%"
+      "type": "number",
+      "title": "Red once used (%)",
+      "description": "Turn red once this much of the 5-hour limit is used, whatever the pace, 0 to 100; 0 is off. Set below orange, orange never shows.",
+      "min": 0,
+      "max": 100,
+      "default": 90
     },
     "orange_pace": {
-      "type": "string",
-      "title": "Orange from projected",
-      "description": "Turn orange when the current rate would end the window at this share of the limit (used % over the share of the window gone).",
-      "options": [
-        "90%",
-        "100%",
-        "110%",
-        "off"
-      ],
-      "default": "100%"
+      "type": "number",
+      "title": "Orange from projected (%)",
+      "description": "Turn orange when the current rate would end the window at this share of the limit (used % over the share of the window gone), 0 to 500; 0 is off.",
+      "min": 0,
+      "max": 500,
+      "default": 100
     },
     "red_pace": {
-      "type": "string",
-      "title": "Red from projected",
-      "description": "Turn red when the current rate would end the window at this share of the limit. Off by default: red is kept for 90% used.",
-      "options": [
-        "110%",
-        "125%",
-        "150%",
-        "off"
-      ],
-      "default": "off"
+      "type": "number",
+      "title": "Red from projected (%)",
+      "description": "Turn red when the current rate would end the window at this share of the limit, 0 to 500; 0 (the default) is off, keeping red for the used share above.",
+      "min": 0,
+      "max": 500,
+      "default": 0
     }
   }
 }
