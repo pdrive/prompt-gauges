@@ -2,6 +2,10 @@
 
 Two small Claude Code mods for keeping an eye on how much room you have left: one for the context window, one for the 5-hour and 7-day usage limits. They work in the terminal and in the desktop app's Code tab.
 
+![limit-band above the prompt and context-label in the footer, in the desktop app](docs/screenshot.png)
+
+*Above the prompt, limit-band (right) beside [Cache Maxxer](https://github.com/vayaan-labs/plugins)'s band (left, a separate mod); in the footer, context-label beside the model name.*
+
 ## context-label
 
 The context window's fill, always visible in the prompt footer beside the model name, instead of behind a click:
