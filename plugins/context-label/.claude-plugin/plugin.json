@@ -35,7 +35,7 @@
     "red_at": {
       "type": "string",
       "title": "Red from",
-      "description": "Where the bar turns red, as a share of the way to auto-compact (of the whole window when auto-compact is off). With auto-compact at 967k, 90% is 870k.",
+      "description": "Where the bar turns red, as a share of the way to auto-compact (of the whole window when auto-compact is off). On a 1M window, where auto-compact runs near the end, 90% is close to 870k.",
       "options": [
         "85%",
         "90%",
