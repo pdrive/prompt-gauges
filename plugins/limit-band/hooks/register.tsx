@@ -24,7 +24,6 @@ const TRACK = '#8888884d'
 
 const HOUR = 3_600_000
 const FIVE_HOURS = 5 * HOUR
-const SEVEN_DAYS = 7 * 24 * HOUR
 const TICK = '#bdbdbd'
 export const PACE_COLORS: Record<Pace, string> = { ok: '#3cc43c', ahead: '#e0a020', over: '#e8453c' }
 
@@ -175,7 +174,8 @@ export const register: Register = (on, options) => {
     const seven = limits.sevenDay
     const tail =
       `${label(five, now)}${paceHint(five, FIVE_HOURS, now)}` +
-      (seven ? ` · 7d ${label(seven, now)}${paceHint(seven, SEVEN_DAYS, now)}` : '')
+      // The 7-day window without its own hint: the row beside Cache Maxxer has room for one
+      (seven ? ` · 7d ${label(seven, now)}` : '')
     // Beside Cache Maxxer's band on one row, except when its detail is open: then under it, full width.
     const isUnder = !(await read($, cmHidden)) && (await read($, cmExpanded))
     const row = { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', columnGap: 2 } as const
