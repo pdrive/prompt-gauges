@@ -88,6 +88,11 @@ test('the band beneath gets fixed-width digits on its Texts, nothing else change
     children: [{ type: 'Text', props: { dimColor: true, tabular: true }, children: ['59:42'] }, 'left'],
   })
   expect(withTabularDigits(null)).toBe(null)
+  // Once the band sets tabular itself, even off, it is handed on untouched
+  const fixed = { type: 'Box', children: [{ type: 'Text', props: { tabular: true }, children: ['59:42'] }, { type: 'Text', children: ['left'] }] }
+  expect(withTabularDigits(fixed as never)).toBe(fixed)
+  const optedOut = { type: 'Text', props: { tabular: false }, children: ['59:42'] }
+  expect(withTabularDigits(optedOut as never)).toBe(optedOut)
 })
 
 test('the bar describes what it shows', async () => {

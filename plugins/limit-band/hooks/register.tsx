@@ -49,12 +49,28 @@ export function toPaceConfig(options: PluginOptions): PaceConfig {
   }
 }
 
+type El = { type: string; props?: Record<string, unknown>; children?: unknown }
+
+// Whether any Text in the tree already says how its digits are drawn (`tabular`, either way).
+function setsTabular(node: unknown): boolean {
+  if (node === null || typeof node !== 'object') return false
+  const el = node as El
+  if (el.type === 'Text' && el.props !== undefined && 'tabular' in el.props) return true
+  return Array.isArray(el.children) && el.children.some(setsTabular)
+}
+
 // The band drawn beneath this one (Cache Maxxer's) with fixed-width digits on every Text, so its
-// ticking seconds stop nudging the row; a copy, nothing else in it changed.
+// ticking seconds stop nudging the row; a copy, nothing else in it changed. Once that band sets
+// `tabular` itself anywhere, it is handed on as drawn: its own choice wins and this steps aside.
 export function withTabularDigits(node: RenderNode | null | undefined): RenderNode | null | undefined {
+  if (setsTabular(node)) return node
+  return addTabular(node)
+}
+
+function addTabular(node: RenderNode | null | undefined): RenderNode | null | undefined {
   if (node === null || node === undefined || typeof node === 'string') return node
-  const el = node as { type: string; props?: Record<string, unknown>; children?: unknown }
-  const children = Array.isArray(el.children) ? el.children.map(c => withTabularDigits(c as RenderNode)) : el.children
+  const el = node as El
+  const children = Array.isArray(el.children) ? el.children.map(c => addTabular(c as RenderNode)) : el.children
   const props = el.type === 'Text' ? { ...(el.props ?? {}), tabular: true } : el.props
   return { ...el, ...(props ? { props } : {}), ...(children !== undefined ? { children } : {}) } as RenderNode
 }
