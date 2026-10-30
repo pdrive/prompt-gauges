@@ -67,7 +67,7 @@ Settings, with `/config`. The thresholds take any whole number from 0 to 100, an
 
 The levels are checked from red down and the first that is reached wins, so they never overlap: a lower level set above a higher one simply never shows.
 
-## limit-band · v0.7.0
+## limit-band · v0.8.0
 
 A thin line above the prompt for the 5-hour usage window, with its percent and time to reset, and the 7-day window beside it:
 
@@ -81,9 +81,9 @@ The bar is colored by **pace**, not by how full it is. 49% used sounds fine, but
 - **green** while on pace, **orange** from a projected 100%;
 - near the top the used share wins whatever the pace: **orange** from 60% used, **red** from 90% (red is kept for that; red by pace is a setting, off by default);
 - in the text, the 5-hour percent is colored by how full it is (green, orange from 60%, red from 90%) and each hint's `↑` by its window's pace; the numbers after it, the times and the 7-day percent stay dim;
-- `↑119%` shows the projection once it reaches the orange pace setting (100% by default), for the 7-day window too; its arrow is orange, or red past the red pace setting;
+- `↑119%` shows the projection once it reaches the orange pace setting (100% by default), for the 7-day window too; its arrow is orange, or red past the red pace setting; `pace_below` shows it always, `↓71%` under the limit;
 - the **tick** on the bar marks where the window's clock is: a fill past the tick is ahead of pace;
-- no projection in the first tenth of a window, when it would be noise; only the used floors apply then.
+- no projection in the first tenth of the 5-hour window or the first 12 hours of the 7-day one, when it would be noise; only the used floors apply then.
 
 The percents come from the last API response; the countdowns tick on their own. It shows only on a subscription with usage limits.
 
@@ -94,6 +94,8 @@ Settings, with `/config` (the defaults are the values above). Any whole number, 
 /config limit-band.red_used=90       # % used, 0 to 100
 /config limit-band.orange_pace=100   # % projected, 0 to 500
 /config limit-band.red_pace=0        # % projected, 0 to 500 (off by default)
+/config limit-band.pace_below=true   # show the projection below orange_pace too, arrow green; ↓ under 100% (off by default)
+/config limit-band.seven_day_wait=12  # hours into the 7-day window before it is projected, 0 to 168
 ```
 
 Pace coloring is an idea from [PCritchfield/claude-gauges](https://github.com/PCritchfield/claude-gauges) (MIT), whose status line and session pane color plan limits the same way; this is its own implementation for the band above the prompt.

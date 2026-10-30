@@ -1,6 +1,6 @@
 {
   "name": "limit-band",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "description": "A thin line above the prompt for the 5-hour usage limit, colored by pace (where it would end at the current rate), with its time to reset, a tick at the window's clock and the 7-day limit beside it",
   "types": "./types/index.d.ts",
   "author": {
@@ -39,6 +39,20 @@
       "min": 0,
       "max": 500,
       "default": 0
+    },
+    "pace_below": {
+      "type": "boolean",
+      "title": "Show the projection below the orange pace",
+      "description": "Show the ↑ projection, its arrow green, also while it is below the orange pace setting, so you see how far under it you are.",
+      "default": false
+    },
+    "seven_day_wait": {
+      "type": "number",
+      "title": "Project the 7-day window after (hours)",
+      "description": "Hours into the 7-day window before its projection shows, 0 to 168: earlier, a working day without its night reads as far over pace.",
+      "min": 0,
+      "max": 168,
+      "default": 12
     }
   }
 }

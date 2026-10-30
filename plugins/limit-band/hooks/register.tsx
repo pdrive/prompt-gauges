@@ -29,7 +29,7 @@ const TICK = '#bdbdbd'
 // Orange and red far enough apart to tell without the other beside them
 export const PACE_COLORS: Record<Pace, string> = { ok: '#3cc43c', ahead: '#ff9800', over: '#e53935' }
 
-export const DEFAULT_PACE: PaceConfig = { orangeUsed: 60, redUsed: 90, orangePace: 100, redPace: null }
+export const DEFAULT_PACE: PaceConfig = { orangeUsed: 60, redUsed: 90, orangePace: 100, redPace: null, showBelow: false, sevenDayWait: 12 }
 
 // A whole-percent setting: 60 -> 60, 0 or "off" -> null (off); a value outside 0 to max, or no number
 // at all, falls back to the default.
@@ -46,6 +46,8 @@ export function toPaceConfig(options: PluginOptions): PaceConfig {
     redUsed: toPct(options.red_used, DEFAULT_PACE.redUsed, 100),
     orangePace: toPct(options.orange_pace, DEFAULT_PACE.orangePace, 500),
     redPace: toPct(options.red_pace, DEFAULT_PACE.redPace, 500),
+    showBelow: options.pace_below === true,
+    sevenDayWait: toPct(options.seven_day_wait, DEFAULT_PACE.sevenDayWait, 168) ?? 0,
   }
 }
 
@@ -92,17 +94,19 @@ export function elapsedOf(w: Window, lengthMs: number, now: number): number | nu
   return Math.min(Math.max(1 - (w.resetsAt - now) / lengthMs, 0), 1)
 }
 
-// Where the window ends at this rate, in percent; null before a tenth of it has gone (too early to say).
-export function projectedOf(w: Window, lengthMs: number, now: number): number | null {
+// Where the window ends at this rate, in percent; null too early to say: before a tenth of the window
+// has gone, or for the 7-day one before `sevenDayWait` hours (a working day takes in one night).
+export function projectedOf(w: Window, lengthMs: number, now: number, cfg: PaceConfig = DEFAULT_PACE): number | null {
   const elapsed = elapsedOf(w, lengthMs, now)
-  return elapsed === null || elapsed < 0.1 ? null : (w.percent / elapsed)
+  const minGone = lengthMs === SEVEN_DAYS ? (cfg.sevenDayWait * HOUR) / lengthMs : 0.1
+  return elapsed === null || elapsed < minGone || elapsed === 0 ? null : (w.percent / elapsed)
 }
 
 // Orange from a projected 100% or once 60% is used, red once 90% is used (the defaults; red by pace is
 // off unless set): the used floors hold whatever the pace, since near the top little is left either way.
 export function paceOf(w: Window, lengthMs: number, now: number, cfg: PaceConfig = DEFAULT_PACE): Pace {
   if (w.resetsAt !== null && w.resetsAt <= now) return 'ok'
-  const projected = projectedOf(w, lengthMs, now)
+  const projected = projectedOf(w, lengthMs, now, cfg)
   const reaches = (value: number | null, at: number | null) => value !== null && at !== null && value >= at
   if (reaches(w.percent, cfg.redUsed) || reaches(projected, cfg.redPace)) return 'over'
   if (reaches(w.percent, cfg.orangeUsed) || reaches(projected, cfg.orangePace)) return 'ahead'
@@ -110,19 +114,22 @@ export function paceOf(w: Window, lengthMs: number, now: number, cfg: PaceConfig
 }
 
 // The pace alone, without the used floors: orange from `orangePace` projected, red from `redPace`;
-// null while the projection reaches neither (or both are off). The `↑` hint and its color follow it.
+// below that, ok with `showBelow` (the hint then shows in green), else null. The `↑` hint and its color follow it.
 export function hintPaceOf(w: Window, lengthMs: number, now: number, cfg: PaceConfig = DEFAULT_PACE): Pace | null {
-  const projected = projectedOf(w, lengthMs, now)
+  const projected = projectedOf(w, lengthMs, now, cfg)
   if (projected === null) return null
   if (cfg.redPace !== null && projected >= cfg.redPace) return 'over'
   if (cfg.orangePace !== null && projected >= cfg.orangePace) return 'ahead'
-  return null
+  return cfg.showBelow ? 'ok' : null
 }
 
-// " ↑117%" once the projection reaches the orange (or red) pace setting, else ''.
+// " ↑117%" once the projection reaches the orange (or red) pace setting (or always, with `showBelow`), else '';
+// " ↓75%" below the limit, which only `showBelow` (or a pace setting under 100) shows.
 export function paceHint(w: Window, lengthMs: number, now: number, cfg: PaceConfig = DEFAULT_PACE): string {
-  const projected = projectedOf(w, lengthMs, now)
-  return projected !== null && hintPaceOf(w, lengthMs, now, cfg) !== null ? ` ↑${Math.round(projected)}%` : ''
+  const projected = projectedOf(w, lengthMs, now, cfg)
+  if (projected === null || hintPaceOf(w, lengthMs, now, cfg) === null) return ''
+  const pct = Math.round(projected)
+  return ` ${pct < 100 ? '↓' : '↑'}${pct}%`
 }
 
 // "2h 14m", "3d 4h", "12m"; null when the window has no reset time.
@@ -169,8 +176,8 @@ export function textRuns(five: Window, seven: Window | null, now: number, cfg: P
     { text: fmtPct(fivePct), color: PACE_COLORS[fillOf(fivePct, cfg)] },
     { text: left(five) },
   ]
-  // " ↑126%" as " ", "↑" in the pace color, "126%" dim
-  const hint = (text: string, pace: Pace) => runs.push({ text: ' ' }, { text: '↑', color: PACE_COLORS[pace] }, { text: text.slice(2) })
+  // " ↑126%" as " ", "↑" (or "↓") in the pace color, "126%" dim
+  const hint = (text: string, pace: Pace) => runs.push({ text: ' ' }, { text: text[1], color: PACE_COLORS[pace] }, { text: text.slice(2) })
   const fiveHint = paceHint(five, FIVE_HOURS, now, cfg)
   if (fiveHint) hint(fiveHint, hintPaceOf(five, FIVE_HOURS, now, cfg) ?? 'ahead')
   if (seven) {

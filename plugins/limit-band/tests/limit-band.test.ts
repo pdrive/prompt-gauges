@@ -54,9 +54,9 @@ test('the text colors the 5-hour percent by fill and each hint arrow by pace, th
 })
 
 test('settings move or turn off each threshold', async () => {
-  expect(toPaceConfig({})).toEqual({ orangeUsed: 60, redUsed: 90, orangePace: 100, redPace: null })
+  expect(toPaceConfig({})).toEqual({ orangeUsed: 60, redUsed: 90, orangePace: 100, redPace: null, showBelow: false, sevenDayWait: 12 })
   const cfg = toPaceConfig({ orange_used: 0, red_used: 80, orange_pace: '110%', red_pace: 'off' })
-  expect(cfg).toEqual({ orangeUsed: null, redUsed: 80, orangePace: 110, redPace: null })
+  expect(cfg).toEqual({ orangeUsed: null, redUsed: 80, orangePace: 110, redPace: null, showBelow: false, sevenDayWait: 12 })
   // 49% heading for 119%: still orange with orange at a projected 110%
   expect(paceOf(at(49, 176), 5 * H, NOW, cfg)).toBe('ahead')
   // 70% halfway heads for 140%: red by default, only orange with the pace red off
@@ -78,6 +78,23 @@ test('the arrow follows the pace settings: shown from orange_pace, red from red_
   expect(paceHint(at(49, 176), 5 * H, NOW, toPaceConfig({ orange_pace: 0 }))).toBe('')
   // The used floors do not color the arrow: 65% used on pace has no arrow
   expect(paceHint(at(65, 30), 5 * H, NOW)).toBe('')
+  // pace_below: the projection shows under the orange pace too, its arrow green, pointing down under the limit
+  const below = toPaceConfig({ pace_below: true })
+  expect(paceHint(at(30, 180), 5 * H, NOW, below)).toBe(' ↓75%')
+  expect(textRuns(at(30, 180), null, NOW, below)).toContainEqual({ text: '↓', color: PACE_COLORS.ok })
+  // Over the limit but under orange_pace: up, still green
+  expect(paceHint(at(42, 180), 5 * H, NOW, toPaceConfig({ pace_below: true, orange_pace: 110 }))).toBe(' ↑105%')
+  expect(hintPaceOf(at(49, 176), 5 * H, NOW, below)).toBe('ahead')
+  // Still nothing in the first tenth of the window
+  expect(paceHint(at(20, 290), 5 * H, NOW, below)).toBe('')
+})
+
+test('the 7-day window is projected after seven_day_wait hours, 12 by default', async () => {
+  const sevenGone = (hours: number) => at(5, (7 * 24 - hours) * 60)
+  expect(projectedOf(sevenGone(11), 7 * 24 * H, NOW)).toBe(null)
+  expect(Math.round(projectedOf(sevenGone(13), 7 * 24 * H, NOW)!)).toBe(65)
+  expect(projectedOf(sevenGone(13), 7 * 24 * H, NOW, toPaceConfig({ seven_day_wait: 24 }))).toBe(null)
+  expect(projectedOf(sevenGone(1), 7 * 24 * H, NOW, toPaceConfig({ seven_day_wait: 0 }))).not.toBe(null)
 })
 
 test('the band beneath gets fixed-width digits on its Texts, nothing else changed', async () => {
