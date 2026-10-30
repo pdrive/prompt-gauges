@@ -8,17 +8,17 @@ Two small Claude Code mods for keeping an eye on how much room you have left: on
 
 > **Cache Maxxer is not part of this repository.** The prompt-cache countdown on the left of the screenshot is [Cache Maxxer](https://github.com/vayaan-labs/cache-maxxer) by Vayaan Labs, a separate mod. Install it from there if you want it too; limit-band shares the row with it when it is installed and takes the row by itself when it is not. These mods work without it.
 
-## Install with an AI agent
+## Install with Claude Code
 
-Copy this into your coding agent (Claude Code, for example); the copy button is in the block's corner:
+Copy this into Claude Code; the copy button is in the block's corner:
 
 ```text
-Install the Claude Code mods from https://github.com/pdrive/prompt-gauges. Read the "Install with an AI agent" section of its README and follow those steps, asking me before you install anything.
+Install the Claude Code mods from https://github.com/pdrive/prompt-gauges. Read the "Install with Claude Code" section of its README and follow those steps, asking me before you install anything.
 ```
 
-The steps below are written for that agent.
+The steps below are written for Claude Code.
 
-> **For the agent installing these mods.** Ask the user before each step that installs anything.
+> **For Claude Code, installing these mods.** Ask the user before each step that installs anything.
 >
 > 1. Ask which mods they want: **context-label** (context fill in the prompt footer), **limit-band** (the 5-hour and 7-day usage limits above the prompt; it shows only on a subscription with usage limits), or both.
 > 2. Ask whether they also want **Cache Maxxer** (the prompt-cache countdown, a separate mod by Vayaan Labs, not maintained here). Say plainly that it is someone else's mod; skip it if they say no.
@@ -130,12 +130,7 @@ claude plugin install context-label@prompt-gauges
 claude plugin install limit-band@prompt-gauges
 ```
 
-Before a commit:
-
-1. `claude plugin validate .` and `claude plugin validate plugins/<mod>`.
-2. `claude plugin test plugins/<mod>` for each mod changed, with the tests updated for the new behaviour.
-3. Bump the mod's `version` in its `plugin.json` for a change people should get, and add it to its heading here and to [CHANGELOG.md](CHANGELOG.md).
-4. Keep this README in step: what each mod shows, its colors and thresholds, its settings.
+Check a change with `claude plugin validate .` and `claude plugin test plugins/<mod>`.
 
 Limits of the desktop app worth knowing:
 
@@ -143,8 +138,6 @@ Limits of the desktop app worth knowing:
 - **The band above the prompt (limit-band)** shares one row with Cache Maxxer's band, with little room to spare: anything added to its text can push Cache Maxxer onto two lines. The shared row needs limit-band listed before Cache Maxxer in `enabledPlugins` (a reinstall appends it at the end and splits the row).
 - **No `isInteractive` on the bar's `Svg`.** The interactive frame a `<title>` tooltip needs reloads on every redraw, so the bar flashes with every countdown tick.
 - **A number that ticks** (a countdown, a percentage) wants `tabular` on its `Text`, so it doesn't change width.
-
-Keep docs, comments and commit messages about the mods themselves, and credit ideas taken from other projects here.
 
 ## License
 
