@@ -1,8 +1,9 @@
 # Written by Claude Code when a mod loads
 plugins/*/.claude-plugin/types/
 
-# Session handoff, local only
+# Session handoff and task index, local only
 docs/HANDOFF.md
+docs/next-session.md
 
 # Local agent instructions: kept out of the public repo (the rules for contributors are in the README)
 AGENTS.md
