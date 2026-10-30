@@ -33,15 +33,15 @@ The steps below are written for that agent.
 > 5. Tell the user to run `/reload-plugins` (or start a new session), and that the settings are in `/config` (`context-label.*`, `limit-band.*`; see the sections below).
 > 6. In the desktop app, where a shell is not at hand, the same is: **+** next to the prompt box → **Plugins** → **Add marketplace** `pdrive/prompt-gauges` → **Add plugin**.
 
-## context-label · v0.6.0
+## context-label · v0.7.0
 
 The context window's fill, always visible in the prompt footer beside the model name, instead of behind a click:
 
 ```
-■☐☐☐ ctx 23% · 228k/1M        Opus 5.5  Medium
+■☐☐☐☐ ctx 23% 228k/1M        Opus 5.5  Medium
 ```
 
-- **The bar** is four squares over the whole window. A square fills once you are within 5 points of it: at 20%, 45%, 70% and 95%.
+- **The bar** is five squares over the whole window (`bar_cells`, 4 to 20). A square fills once the fill is halfway into it: with five, at 10%, 30%, 50%, 70% and 90%. The desktop footer cuts the slot at a fixed width, so a longer bar can push the end of the text off ("ctx 10%..."); lower `bar_cells` if you see that.
 - **The color** of the filled squares says how much you should care:
 
   | Color  | From (defaults) | Why |
@@ -62,6 +62,7 @@ Settings, with `/config`. The thresholds take any whole number from 0 to 100, an
 /config context-label.red_at=93             # % of the way to auto-compact
 /config context-label.haiku_price_step=true # yellow at 100k on Haiku 5.5
 /config context-label.show=bar and text|bar|text
+/config context-label.bar_cells=5           # squares in the bar, 4 to 20
 ```
 
 The levels are checked from red down and the first that is reached wins, so they never overlap: a lower level set above a higher one simply never shows.

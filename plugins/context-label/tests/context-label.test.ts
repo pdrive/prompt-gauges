@@ -1,6 +1,6 @@
 import { expect, mock, test } from 'claude-code/testing'
 
-import { barText, filledCells, fmtTokens, footerText, levelOf, toConfig } from '../hooks/register'
+import { barText, filledCells, fmtTokens, footerText, levelOf, toCells, toConfig } from '../hooks/register'
 
 const c = { tokens: 353_200, window: 1_000_000, percent: 35 }
 const at = (tokens: number) => ({ ...c, tokens })
@@ -13,15 +13,23 @@ test('tokens read in k and M', () => {
 })
 
 test('the label follows the engine modes', () => {
-  expect(footerText([], c)).toBe('ctx 35% · 353k/1M')
-  expect(footerText(['focus', 'memory paused'], c)).toBe('focus & memory paused · ctx 35% · 353k/1M')
+  expect(footerText([], c)).toBe('ctx 35% 353k/1M')
+  expect(footerText(['focus', 'memory paused'], c)).toBe('focus & memory paused · ctx 35% 353k/1M')
 })
 
-test('the bar fills a cell at 20, 45, 70 and 95% of the window', () => {
-  expect([0.01, 0.15, 0.19, 0.2, 0.23, 0.44, 0.45, 0.7, 0.94, 0.95, 1].map(filledCells)).toEqual([0, 0, 0, 1, 1, 1, 2, 3, 3, 4, 4])
-  expect(barText(c)).toBe('■☐☐☐')
-  expect(barText(at(0))).toBe('☐☐☐☐')
-  expect(barText(at(1_000_000))).toBe('■■■■')
+test('the bar fills a cell once the fill is halfway into it', () => {
+  // Five cells: at 10, 30, 50, 70, 90% of the window
+  expect([0.01, 0.09, 0.11, 0.29, 0.31, 0.5, 0.89, 0.91, 1].map((s) => filledCells(s, 5))).toEqual([0, 0, 1, 1, 2, 3, 4, 5, 5])
+  expect([0.12, 0.13, 0.37, 0.38, 0.62, 0.63, 0.87, 0.88].map((s) => filledCells(s, 4))).toEqual([0, 1, 1, 2, 2, 3, 3, 4])
+  expect(barText(c, 5)).toBe('■■☐☐☐')
+  expect(barText(at(0), 5)).toBe('☐☐☐☐☐')
+  expect(barText(at(1_000_000), 5)).toBe('■■■■■')
+  expect(barText(c, 10)).toBe('■■■■☐☐☐☐☐☐')
+})
+
+test('the bar length is a whole number from 4 to 20, five by default', () => {
+  expect([undefined, 12, '8', 3, 21, 'wide', 6.4].map(toCells)).toEqual([5, 12, 8, 5, 5, 5, 6])
+  expect(toConfig({}).cells).toBe(5)
 })
 
 test('levels by default: yellow at half the window (100k on Haiku), orange and red at 72 and 93% of auto-compact', () => {
@@ -38,7 +46,7 @@ test('levels by default: yellow at half the window (100k on Haiku), orange and r
 })
 
 test('settings take any whole percent from 0 to 100', () => {
-  expect(toConfig({ yellow_at: 40, orange_at: 75, red_at: '95', show: 'bar' })).toEqual({ yellowAt: 0.4, haikuStep: true, orangeAt: 0.75, redAt: 0.95, show: 'bar' })
+  expect(toConfig({ yellow_at: 40, orange_at: 75, red_at: '95', show: 'bar' })).toEqual({ yellowAt: 0.4, haikuStep: true, orangeAt: 0.75, redAt: 0.95, show: 'bar', cells: 5 })
   // 0 or "off" turns a level off; out of range or no number falls back to the default
   expect(toConfig({ orange_at: 0, red_at: 'off' })).toMatchObject({ orangeAt: null, redAt: null })
   expect(toConfig({ red_at: 150, orange_at: 'lots' })).toMatchObject({ redAt: 0.93, orangeAt: 0.72 })
@@ -59,7 +67,7 @@ test('the footer draws on terminal and desktop once a reading arrives', async ($
   })
   for (const surface of ['terminal', 'desktop'] as const) {
     const ui = await $.ui.mount({ plugin: 'context-label', surface, component: 'SessionMode', props: { modes: [] } })
-    expect(await ui.find({ type: 'Text', text: /ctx 35% · 353k\/1M/ })).toBeDefined()
+    expect(await ui.find({ type: 'Text', text: /ctx 35% 353k\/1M/ })).toBeDefined()
     await ui.unmount()
   }
 })

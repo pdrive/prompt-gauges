@@ -3,9 +3,11 @@ import type { EngineInterface, PluginOptions, Register, SessionContextUsage } fr
 
 import type { Config, Ctx, Level } from '../types'
 
-// The context window's fill in the prompt footer's mode slot, beside the model name: a four-cell bar
-// ("■■☐☐", the filled squares colored by level, the empty ones dim), then "ctx 35% · 353k/1M".
-// Kept short: the desktop slot is cut at a fixed width. Figures come from the last API response.
+// The context window's fill in the prompt footer's mode slot, beside the model name: a five-cell bar
+// ("■■☐☐☐", the filled squares colored by level, the empty ones dim), then "ctx 35% 353k/1M".
+// The desktop slot is cut at a fixed width (about four squares beside the full text), whatever room is
+// free beside it: the bar's length is a setting.
+// Figures come from the last API response.
 // The slot is drawn as a tree of our own: the desktop app ignores a rewritten `modes` list but draws a tree.
 //
 // Levels: green; yellow from half the window, where each turn (which resends it all) gets dear, or from
@@ -17,7 +19,7 @@ const ctxAtom = atom({ plugin: 'context-label', key: 'ctx' } as const, null)
 const thresholdAtom = atom({ plugin: 'context-label', key: 'threshold' } as const, null)
 const modelAtom = atom({ plugin: 'context-label', key: 'model' } as const, null)
 
-const BAR_CELLS = 4
+const DEFAULT_CELLS = 5
 const HAIKU_YELLOW = 100_000
 
 const COLORS: Record<Level, string> = { green: '#3cc43c', yellow: '#e0c020', orange: '#f08c1e', red: '#e8453c' }
@@ -33,6 +35,12 @@ export function toShare(v: unknown, fallback: number): number | null {
   return pct === 0 ? null : pct / 100
 }
 
+// The bar's length in cells, a whole number from 4 to 20; anything else falls back to the default.
+export function toCells(v: unknown): number {
+  const n = typeof v === 'number' ? v : typeof v === 'string' ? parseInt(v, 10) : NaN
+  return Number.isFinite(n) && n >= 4 && n <= 20 ? Math.round(n) : DEFAULT_CELLS
+}
+
 export function toConfig(options: PluginOptions): Config {
   const show = pick(options.show, ['bar and text', 'bar', 'text'], 'bar and text')
   return {
@@ -41,6 +49,7 @@ export function toConfig(options: PluginOptions): Config {
     orangeAt: toShare(options.orange_at, 72),
     redAt: toShare(options.red_at, 93),
     show: show === 'bar and text' ? 'both' : show,
+    cells: toCells(options.bar_cells),
   }
 }
 
@@ -56,7 +65,7 @@ export function fmtTokens(n: number): string {
   return `${n}`
 }
 
-export const label = (c: Ctx) => `ctx ${c.percent}% · ${fmtTokens(c.tokens)}/${fmtTokens(c.window)}`
+export const label = (c: Ctx) => `ctx ${c.percent}% ${fmtTokens(c.tokens)}/${fmtTokens(c.window)}`
 
 // The engine's own mode labels ("focus & memory paused") first, then ours.
 export const footerText = (modes: readonly string[], c: Ctx) => [modes.join(' & '), label(c)].filter(Boolean).join(' · ')
@@ -76,13 +85,13 @@ export function levelOf(c: Ctx, threshold: number | null, model: string | null, 
   return 'green'
 }
 
-// A cell fills once the fill is within a fifth of a cell of its end: with four, at 20%, 45%, 70%, 95%.
-export const filledCells = (share: number) => Math.min(BAR_CELLS, Math.floor(BAR_CELLS * clamp01(share) + 0.2))
+// A cell fills once the fill is halfway into it: with five, at 10%, 30%, 50%, 70%, 90%.
+export const filledCells = (share: number, cells: number) => Math.round(cells * clamp01(share))
 
 // The bar spans the whole window in cells, filled ones told apart by shape as well as color.
-export function barText(c: Ctx): string {
-  const filled = filledCells(c.tokens / c.window)
-  return '■'.repeat(filled) + '☐'.repeat(BAR_CELLS - filled)
+export function barText(c: Ctx, cells: number): string {
+  const filled = filledCells(c.tokens / c.window, cells)
+  return '■'.repeat(filled) + '☐'.repeat(cells - filled)
 }
 
 // The threshold moves only with the window (a model switch), so it is read then, not every response.
@@ -138,7 +147,7 @@ export const register: Register = (on, options) => {
     const c = await read($, ctxAtom)
     if (c === null) return next(e)
     const color = COLORS[levelOf(c, await read($, thresholdAtom), await read($, modelAtom), cfg)]
-    const bar = barText(c)
+    const bar = barText(c, cfg.cells)
     const { Box, Text } = $.ui.resolve(e)
     // Text only, and short: the desktop footer drops an Svg, and cuts the slot at a fixed width
     return (

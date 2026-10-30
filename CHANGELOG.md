@@ -4,6 +4,11 @@ Newest first. `claude plugin list` shows the version you have; `claude plugin up
 
 ## context-label
 
+### 0.7.0
+- A five-square bar instead of four; `bar_cells` sets it from 4 to 20 (the desktop footer cuts the slot at a fixed width, so a long bar clips the text).
+- The text drops its middle dot: `ctx 35% 353k/1M`, to fit.
+- A square fills once the fill is halfway into it (10%, 30%, 50%, 70%, 90% with five), instead of when it is nearly full.
+
 ### 0.6.0
 - The ctx text is drawn in the monospace face.
 

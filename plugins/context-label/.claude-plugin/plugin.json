@@ -1,6 +1,6 @@
 {
   "name": "context-label",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "The context window's fill (percent and used/total) always shown in the prompt footer, beside the model name",
   "types": "./types/index.d.ts",
   "userConfig": {
@@ -37,13 +37,21 @@
     "show": {
       "type": "string",
       "title": "Show",
-      "description": "What the footer shows: the four-square bar, the ctx text, or both.",
+      "description": "What the footer shows: the square bar, the ctx text, or both.",
       "options": [
         "bar and text",
         "bar",
         "text"
       ],
       "default": "bar and text"
+    },
+    "bar_cells": {
+      "type": "number",
+      "title": "Bar length (squares)",
+      "description": "How many squares the bar has, 4 to 20. The desktop footer cuts the label at a fixed width: lower it if the text ends in an ellipsis.",
+      "min": 4,
+      "max": 20,
+      "default": 5
     }
   },
   "author": {

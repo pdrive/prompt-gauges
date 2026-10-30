@@ -10,7 +10,7 @@
     {
       "name": "context-label",
       "source": "./plugins/context-label",
-      "description": "The context window's fill always shown in the prompt footer, beside the model name: a four-square bar colored by level, then ctx 23% · 228k/1M"
+      "description": "The context window's fill always shown in the prompt footer, beside the model name: a five-square bar colored by level, then ctx 23% 228k/1M"
     },
     {
       "name": "limit-band",
