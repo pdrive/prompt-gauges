@@ -67,12 +67,12 @@ Settings, with `/config`. The thresholds take any whole number from 0 to 100, an
 
 The levels are checked from red down and the first that is reached wins, so they never overlap: a lower level set above a higher one simply never shows.
 
-## limit-band · v0.8.0
+## limit-band · v0.8.1
 
 A thin line above the prompt for the 5-hour usage window, with its percent and time to reset, and the 7-day window beside it:
 
 ```
-5h ━━━━━━━━┃━━──────────  49% (2h 56m) ↑119% · 7d 31% (4d 18h)
+5h ━━━━━━━━┃━━──────────  49% 2h56m ↑119% · 7d 31% 4d18h
 ```
 
 The bar is colored by **pace**, not by how full it is. 49% used sounds fine, but if only 41% of the window has gone by, you are on course to hit the limit before it resets. So:

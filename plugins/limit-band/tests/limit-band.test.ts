@@ -35,14 +35,14 @@ test('pace: projected use over the share of the window gone', async () => {
 test('the text colors the 5-hour percent by fill and each hint arrow by pace, the rest dim', async () => {
   const D = 24 * 60
   const runs = textRuns(at(67, 141), at(33, 4 * D + 17 * 60), NOW)
-  expect(runs.map(r => r.text).join('')).toBe('67% (2h 21m) ↑126% · 7d 33% (4d 17h) ↑101%')
+  expect(runs.map(r => r.text).join('')).toBe('67% 2h21m ↑126% · 7d 33% 4d17h ↑101%')
   expect(runs).toEqual([
     { text: '67%', color: PACE_COLORS.ahead },
-    { text: ' (2h 21m)' },
+    { text: ' 2h21m' },
     { text: ' ' },
     { text: '↑', color: PACE_COLORS.ahead },
     { text: '126%' },
-    { text: ' · 7d 33% (4d 17h)' },
+    { text: ' · 7d 33% 4d17h' },
     { text: ' ' },
     { text: '↑', color: PACE_COLORS.ahead },
     { text: '101%' },
@@ -50,7 +50,7 @@ test('the text colors the 5-hour percent by fill and each hint arrow by pace, th
   // By fill alone: green below 60%, orange from 60%, red from 90%
   expect([59, 60, 89, 90].map(p => fillOf(p))).toEqual(['ok', 'ahead', 'ahead', 'over'])
   // On pace: no hints, the 5-hour percent green
-  expect(textRuns(at(30, 150), null, NOW)).toEqual([{ text: '30%', color: PACE_COLORS.ok }, { text: ' (2h 30m)' }])
+  expect(textRuns(at(30, 150), null, NOW)).toEqual([{ text: '30%', color: PACE_COLORS.ok }, { text: ' 2h30m' }])
 })
 
 test('settings move or turn off each threshold', async () => {
@@ -170,7 +170,7 @@ test('the band draws on terminal and desktop once a reading arrives', async ($, 
       props: { hasSurvey: false, isWorking: false, maxRows: 20, bodyColumns: 100 } as never,
     })
     expect(await ui.find({ key: 'limit-band' })).toBeDefined()
-    expect(await ui.find({ type: 'Text', text: /42% \(1h 30m\) · 7d 18% \(2d 2h\)/ })).toBeDefined()
+    expect(await ui.find({ type: 'Text', text: /42% 1h30m · 7d 18% 2d2h/ })).toBeDefined()
     await ui.unmount()
   }
 })

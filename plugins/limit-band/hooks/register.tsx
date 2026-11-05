@@ -165,11 +165,11 @@ export function fillOf(percent: number, cfg: PaceConfig = DEFAULT_PACE): Pace {
 
 // The band's text as runs, each with its color or none (dim): the 5-hour percent by how full it is,
 // each hint's `↑` alone by its window's pace (its number dim), the times and the 7-day percent dim.
-// "67% (2h 21m) ↑126% · 7d 33% (4d 17h) ↑102%"
+// "67% 2h21m ↑126% · 7d 33% 4d17h ↑102%": no parentheses or inner spaces, since the row beside Cache Maxxer has little spare width.
 export function textRuns(five: Window, seven: Window | null, now: number, cfg: PaceConfig = DEFAULT_PACE): { text: string; color?: string }[] {
   const left = (w: Window) => {
     const t = untilReset(w.resetsAt, now)
-    return t && t !== 'reset' ? ` (${t})` : ''
+    return t && t !== 'reset' ? ` ${t.replace(' ', '')}` : ''
   }
   const fivePct = shownPercent(five, now)
   const runs: { text: string; color?: string }[] = [

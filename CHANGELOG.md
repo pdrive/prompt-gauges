@@ -22,6 +22,9 @@ Newest first. `claude plugin list` shows the version you have; `claude plugin up
 
 ## limit-band
 
+### 0.8.1
+- Shorter times, `67% 2h21m ↑126% · 7d 33% 4d17h ↑102%`, so three-digit percents still fit on one row beside Cache Maxxer's band.
+
 ### 0.8.0
 - `pace_below` (off by default): the projection shows below `orange_pace` too, its arrow green, `↓75%` under the limit.
 - The 7-day window is projected after 12 hours instead of 17 (a tenth); `seven_day_wait` sets it.
