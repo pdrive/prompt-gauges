@@ -4,7 +4,7 @@ import type { EngineInterface, PluginOptions, Register, SessionContextUsage } fr
 import type { Config, Ctx, Level } from '../types'
 
 // The context window's fill in the prompt footer's mode slot, beside the model name: a five-cell bar
-// ("■■☐☐☐", the filled squares colored by level, the empty ones dim), then "ctx 35% 353k/1M".
+// ("■■☐☐☐", the filled squares colored by level, the empty ones dim), then "ctx 35% 353k".
 // The desktop slot is cut at a fixed width (about four squares beside the full text), whatever room is
 // free beside it: the bar's length is a setting.
 // Figures come from the last API response. Then the output style's first letter ("C" for Concise, "D" for
@@ -60,19 +60,20 @@ export function toConfig(options: PluginOptions): Config {
 export const toCtx = (c: SessionContextUsage): Ctx | null =>
   c.tokens === undefined ? null : { tokens: c.tokens, window: c.window, percent: c.percent ?? Math.round((100 * c.tokens) / c.window) }
 
-// 353200 -> "353k", 45300 -> "45.3k", 1000000 -> "1M": no decimal from 100k up, to stay short
+// 353200 -> "353k", 99800 -> "100k", 4530 -> "4.5k", 1000000 -> "1M": no decimal from 10k up, to stay short
 export function fmtTokens(n: number): string {
   if (n >= 1_000_000) return `${+(n / 1_000_000).toFixed(1)}M`
-  if (n >= 100_000) return `${Math.round(n / 1_000)}k`
+  if (n >= 10_000) return `${Math.round(n / 1_000)}k`
   if (n >= 1_000) return `${+(n / 1_000).toFixed(1)}k`
   return `${n}`
 }
 
-export const label = (c: Ctx) => `ctx ${c.percent}% ${fmtTokens(c.tokens)}/${fmtTokens(c.window)}`
+export const label = (c: Ctx) => `ctx ${c.percent}% ${fmtTokens(c.tokens)}`
 
 // "Concise" -> "C", "default" -> "D"
 export const styleTag = (style: string) => style.charAt(0).toUpperCase()
 
+// No window total: the desktop slot has no room for it (the app's context popover shows it).
 // The engine's own mode labels ("focus & memory paused") first, then ours, ending in the style's tag.
 export const footerText = (modes: readonly string[], c: Ctx, style: string | null = null) =>
   [modes.join(' & '), label(c) + (style ? ` ${styleTag(style)}` : '')].filter(Boolean).join(' · ')

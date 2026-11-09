@@ -1,7 +1,7 @@
 {
   "name": "context-label",
   "version": "0.8.0",
-  "description": "The context window's fill (percent and used/total) always shown in the prompt footer, beside the model name",
+  "description": "The context window's fill (percent and tokens used) always shown in the prompt footer, beside the model name",
   "types": "./types/index.d.ts",
   "userConfig": {
     "yellow_at": {

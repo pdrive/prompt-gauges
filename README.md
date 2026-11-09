@@ -38,7 +38,7 @@ The steps below are written for Claude Code.
 The context window's fill, always visible in the prompt footer beside the model name, instead of behind a click:
 
 ```
-■☐☐☐☐ ctx 23% 228k/1M C        Opus 5.5  Medium
+■☐☐☐☐ ctx 23% 228k C        Opus 5.5  Medium
 ```
 
 - **The bar** is five squares over the whole window (`bar_cells`, 4 to 20). A square fills once the fill is halfway into it: with five, at 10%, 30%, 50%, 70% and 90%. The desktop footer cuts the slot at a fixed width, so a longer bar can push the end of the text off ("ctx 10%..."); lower `bar_cells` if you see that.
@@ -52,7 +52,7 @@ The context window's fill, always visible in the prompt footer beside the model 
   | red    | 93% of the way to auto-compact (about 900k) | auto-compact is near, which can break a chat |
 
   Orange and red follow your session's auto-compact point (read from Claude Code, as `/context` shows it); with auto-compact off they follow the whole window.
-- **The text** is the same figures as the app's own context popover, updated after every response. A fresh or just-compacted session shows nothing until its first response.
+- **The text** is the percent and tokens used, as the app's own context popover shows them (the window total is left out, for room), updated after every response. A fresh or just-compacted session shows nothing until its first response.
 - **The output style** ends the text as its first letter (`C` for Concise, `D` for default), as the slot has no room for its name. A `/output-style` change shows from the next prompt on.
 
 Settings, with `/config`. The thresholds take any whole number from 0 to 100, and 0 turns a level off:

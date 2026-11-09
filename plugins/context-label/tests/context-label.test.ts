@@ -11,16 +11,18 @@ const CONCISE = { name: 'Concise', isKeepingCodingInstructions: true }
 
 test('tokens read in k and M', () => {
   expect(fmtTokens(353_200)).toBe('353k')
-  expect(fmtTokens(45_300)).toBe('45.3k')
+  expect(fmtTokens(45_300)).toBe('45k')
+  expect(fmtTokens(99_800)).toBe('100k')
+  expect(fmtTokens(4_530)).toBe('4.5k')
   expect(fmtTokens(200_000)).toBe('200k')
   expect(fmtTokens(1_000_000)).toBe('1M')
 })
 
 test('the label follows the engine modes', () => {
-  expect(footerText([], c)).toBe('ctx 35% 353k/1M')
-  expect(footerText(['focus', 'memory paused'], c)).toBe('focus & memory paused · ctx 35% 353k/1M')
-  expect(footerText([], c, 'Concise')).toBe('ctx 35% 353k/1M C')
-  expect(footerText(['focus'], c, 'default')).toBe('focus · ctx 35% 353k/1M D')
+  expect(footerText([], c)).toBe('ctx 35% 353k')
+  expect(footerText(['focus', 'memory paused'], c)).toBe('focus & memory paused · ctx 35% 353k')
+  expect(footerText([], c, 'Concise')).toBe('ctx 35% 353k C')
+  expect(footerText(['focus'], c, 'default')).toBe('focus · ctx 35% 353k D')
 })
 
 test('the bar fills a cell once the fill is halfway into it', () => {
@@ -73,7 +75,7 @@ test('the footer draws on terminal and desktop once a reading arrives', async ($
   })
   for (const surface of ['terminal', 'desktop'] as const) {
     const ui = await $.ui.mount({ plugin: 'context-label', surface, component: 'SessionMode', props: { modes: [] } })
-    expect(await ui.find({ type: 'Text', text: /ctx 35% 353k\/1M/ })).toBeDefined()
+    expect(await ui.find({ type: 'Text', text: /ctx 35% 353k/ })).toBeDefined()
     await ui.unmount()
   }
 })
@@ -101,12 +103,12 @@ test("the output style's first letter ends the text, from the composed prompt on
   }
   expect(await text()).toBeDefined()
   await $.prompt.compose(facts(CONCISE))
-  expect(await text()).toMatchObject({ text: expect.stringMatching(/353k\/1M C$/) })
+  expect(await text()).toMatchObject({ text: expect.stringMatching(/353k C$/) })
   // A /context measure does not count; the default style reads "default"
   await $.prompt.compose(facts(null, ['analysis']))
-  expect(await text()).toMatchObject({ text: expect.stringMatching(/1M C$/) })
+  expect(await text()).toMatchObject({ text: expect.stringMatching(/353k C$/) })
   await $.prompt.compose(facts(null))
-  expect(await text()).toMatchObject({ text: expect.stringMatching(/1M D$/) })
+  expect(await text()).toMatchObject({ text: expect.stringMatching(/353k D$/) })
 })
 
 test('show_style: false leaves the style out', { options: { show_style: false } }, async ($, on) => {
@@ -116,5 +118,5 @@ test('show_style: false leaves the style out', { options: { show_style: false } 
   await $.session.measure({ context: { tokens: 353_200, window: 1_000_000, percent: 35 }, rateLimits: [], changed: ['context'] })
   await $.prompt.compose(facts(CONCISE))
   const ui = await $.ui.mount({ plugin: 'context-label', surface: 'desktop', component: 'SessionMode', props: { modes: [] } })
-  expect(await ui.find({ type: 'Text', text: /1M C/ })).toBeUndefined()
+  expect(await ui.find({ type: 'Text', text: /353k C/ })).toBeUndefined()
 })
