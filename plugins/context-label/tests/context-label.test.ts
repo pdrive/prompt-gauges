@@ -57,7 +57,7 @@ test('levels by default: yellow at half the window (100k on Haiku), orange and r
 
 test('settings take any whole percent from 0 to 100', () => {
   expect(toConfig({ yellow_at: 40, orange_at: 75, red_at: '95', show: 'bar' })).toEqual({ yellowAt: 0.4, haikuStep: true, orangeAt: 0.75, redAt: 0.95, show: 'bar', cells: 5, end: 'style' })
-  expect([undefined, 'window size', 'nothing', 'other'].map((v) => toConfig({ text_end: v }).end)).toEqual(['style', 'window', 'none', 'style'])
+  expect([toConfig({}), ...['window size', 'nothing', 'other'].map((v) => toConfig({ text_end: v }))].map((x) => x.end)).toEqual(['style', 'window', 'none', 'style'])
   // 0 or "off" turns a level off; out of range or no number falls back to the default
   expect(toConfig({ orange_at: 0, red_at: 'off' })).toMatchObject({ orangeAt: null, redAt: null })
   expect(toConfig({ red_at: 150, orange_at: 'lots' })).toMatchObject({ redAt: 0.93, orangeAt: 0.72 })
