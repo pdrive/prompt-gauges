@@ -19,7 +19,8 @@ test('tokens read in k and M', () => {
 test('the label follows the engine modes', () => {
   expect(footerText([], c)).toBe('ctx 35% 353k/1M')
   expect(footerText(['focus', 'memory paused'], c)).toBe('focus & memory paused · ctx 35% 353k/1M')
-  expect(footerText([], c, 'Concise')).toBe('ctx 35% 353k/1M · Concise')
+  expect(footerText([], c, 'Concise')).toBe('ctx 35% 353k/1M C')
+  expect(footerText(['focus'], c, 'default')).toBe('focus · ctx 35% 353k/1M D')
 })
 
 test('the bar fills a cell once the fill is halfway into it', () => {
@@ -87,7 +88,7 @@ test('show: bar leaves the text out', { options: { show: 'bar' } }, async ($, on
   await ui.unmount()
 })
 
-test('the output style ends the text, from the composed prompt on', async ($, on) => {
+test("the output style's first letter ends the text, from the composed prompt on", async ($, on) => {
   on('session.measure', (_$, e) => ({ changed: e.changed }))
   on('prompt.compose', () => ({ sections: [] }))
   on('ui.render', ($e, e) => h($e.ui.resolve(e).Text, {}, 'engine') as never)
@@ -100,12 +101,12 @@ test('the output style ends the text, from the composed prompt on', async ($, on
   }
   expect(await text()).toBeDefined()
   await $.prompt.compose(facts(CONCISE))
-  expect(await text()).toMatchObject({ text: expect.stringMatching(/353k\/1M · Concise$/) })
+  expect(await text()).toMatchObject({ text: expect.stringMatching(/353k\/1M C$/) })
   // A /context measure does not count; the default style reads "default"
   await $.prompt.compose(facts(null, ['analysis']))
-  expect(await text()).toMatchObject({ text: expect.stringMatching(/· Concise$/) })
+  expect(await text()).toMatchObject({ text: expect.stringMatching(/1M C$/) })
   await $.prompt.compose(facts(null))
-  expect(await text()).toMatchObject({ text: expect.stringMatching(/· default$/) })
+  expect(await text()).toMatchObject({ text: expect.stringMatching(/1M D$/) })
 })
 
 test('show_style: false leaves the style out', { options: { show_style: false } }, async ($, on) => {
@@ -115,5 +116,5 @@ test('show_style: false leaves the style out', { options: { show_style: false } 
   await $.session.measure({ context: { tokens: 353_200, window: 1_000_000, percent: 35 }, rateLimits: [], changed: ['context'] })
   await $.prompt.compose(facts(CONCISE))
   const ui = await $.ui.mount({ plugin: 'context-label', surface: 'desktop', component: 'SessionMode', props: { modes: [] } })
-  expect(await ui.find({ type: 'Text', text: /Concise/ })).toBeUndefined()
+  expect(await ui.find({ type: 'Text', text: /1M C/ })).toBeUndefined()
 })

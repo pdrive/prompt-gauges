@@ -56,7 +56,7 @@
     "show_style": {
       "type": "boolean",
       "title": "Show the output style",
-      "description": "End the ctx text with the session's output style (Concise, or default). Turn it off if the footer cuts the text.",
+      "description": "End the ctx text with the output style's first letter (C for Concise, D for default).",
       "default": true
     }
   },

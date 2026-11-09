@@ -7,8 +7,8 @@ import type { Config, Ctx, Level } from '../types'
 // ("■■☐☐☐", the filled squares colored by level, the empty ones dim), then "ctx 35% 353k/1M".
 // The desktop slot is cut at a fixed width (about four squares beside the full text), whatever room is
 // free beside it: the bar's length is a setting.
-// Figures come from the last API response. The output style follows ("Concise", or "default"), read from
-// each system prompt the engine composes, so a `/output-style` change shows from the next request on.
+// Figures come from the last API response. Then the output style's first letter ("C" for Concise, "D" for
+// default): the slot has no room for its name. It is read from each composed system prompt.
 // The slot is drawn as a tree of our own: the desktop app ignores a rewritten `modes` list but draws a tree.
 //
 // Levels: green; yellow from half the window, where each turn (which resends it all) gets dear, or from
@@ -70,9 +70,12 @@ export function fmtTokens(n: number): string {
 
 export const label = (c: Ctx) => `ctx ${c.percent}% ${fmtTokens(c.tokens)}/${fmtTokens(c.window)}`
 
-// The engine's own mode labels ("focus & memory paused") first, then ours, then the output style.
+// "Concise" -> "C", "default" -> "D"
+export const styleTag = (style: string) => style.charAt(0).toUpperCase()
+
+// The engine's own mode labels ("focus & memory paused") first, then ours, ending in the style's tag.
 export const footerText = (modes: readonly string[], c: Ctx, style: string | null = null) =>
-  [modes.join(' & '), label(c), style].filter(Boolean).join(' · ')
+  [modes.join(' & '), label(c) + (style ? ` ${styleTag(style)}` : '')].filter(Boolean).join(' · ')
 
 const clamp01 = (x: number) => Math.min(Math.max(x, 0), 1)
 
@@ -122,6 +125,15 @@ async function readModel($: EngineInterface) {
   }
 }
 
+// A composition for nobody to send, over the session's own facts: the prompt.compose hook below records the style.
+async function readStyle($: EngineInterface) {
+  try {
+    await $.prompt.compose()
+  } catch {
+    // Keep the last one
+  }
+}
+
 export const register: Register = (on, options) => {
   const cfg = toConfig(options)
 
@@ -135,7 +147,14 @@ export const register: Register = (on, options) => {
     } catch {
       // No reading yet: the label waits for the first response
     }
+    await readStyle($)
     return started
+  })
+
+  // A thread resends its recorded prompt, so a style change may compose nothing: ask on each prompt too
+  on('prompt.submit', async ($, e, next) => {
+    await readStyle($)
+    return next(e)
   })
 
   on('session.measure', async ($, e, next) => {
