@@ -60,9 +60,10 @@ export function toConfig(options: PluginOptions): Config {
 export const toCtx = (c: SessionContextUsage): Ctx | null =>
   c.tokens === undefined ? null : { tokens: c.tokens, window: c.window, percent: c.percent ?? Math.round((100 * c.tokens) / c.window) }
 
-// 353200 -> "353k", 99800 -> "100k", 4530 -> "4.5k", 1000000 -> "1M": no decimal from 10k up, to stay short
+// 353200 -> "353k", 99800 -> "100k", 4530 -> "4.5k", 999600 or 1000000 -> "1M": no decimal from 10k up, to stay short
 export function fmtTokens(n: number): string {
-  if (n >= 1_000_000) return `${+(n / 1_000_000).toFixed(1)}M`
+  // From 999.5k: rounded in k it would read "1000k"
+  if (n >= 999_500) return `${+(n / 1_000_000).toFixed(1)}M`
   if (n >= 10_000) return `${Math.round(n / 1_000)}k`
   if (n >= 1_000) return `${+(n / 1_000).toFixed(1)}k`
   return `${n}`

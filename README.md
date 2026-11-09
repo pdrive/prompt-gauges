@@ -33,7 +33,7 @@ The steps below are written for Claude Code.
 > 5. Tell the user to run `/reload-plugins` (or start a new session), and that the settings are in `/config` (`context-label.*`, `limit-band.*`; see the sections below).
 > 6. In the desktop app, where a shell is not at hand, the same is: **+** next to the prompt box → **Plugins** → **Add marketplace** `pdrive/prompt-gauges` → **Add plugin**.
 
-## context-label · v0.8.0
+## context-label · v0.8.1
 
 The context window's fill, always visible in the prompt footer beside the model name, instead of behind a click:
 

@@ -16,6 +16,8 @@ test('tokens read in k and M', () => {
   expect(fmtTokens(4_530)).toBe('4.5k')
   expect(fmtTokens(200_000)).toBe('200k')
   expect(fmtTokens(1_000_000)).toBe('1M')
+  expect(fmtTokens(999_400)).toBe('999k')
+  expect(fmtTokens(999_600)).toBe('1M')
 })
 
 test('the label follows the engine modes', () => {

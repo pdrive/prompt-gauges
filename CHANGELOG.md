@@ -4,6 +4,9 @@ Newest first. `claude plugin list` shows the version you have; `claude plugin up
 
 ## context-label
 
+### 0.8.1
+- Just under 1M tokens reads `1M`, not `1000k`.
+
 ### 0.8.0
 - The text ends with the output style's first letter (`C` for Concise, `D` for default) instead of the window size; `text_end` picks either, or nothing. The desktop slot has room for one.
 - Tokens drop the decimal from 10k up, to fit.
