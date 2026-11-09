@@ -53,11 +53,16 @@
       "max": 20,
       "default": 5
     },
-    "show_style": {
-      "type": "boolean",
-      "title": "Show the output style",
-      "description": "End the ctx text with the output style's first letter (C for Concise, D for default).",
-      "default": true
+    "text_end": {
+      "type": "string",
+      "title": "End the text with",
+      "description": "The desktop footer has room for one: the output style's first letter (C for Concise, D for default), or the window size (/1M).",
+      "options": [
+        "output style",
+        "window size",
+        "nothing"
+      ],
+      "default": "output style"
     }
   },
   "author": {

@@ -7,8 +7,8 @@ import type { Config, Ctx, Level } from '../types'
 // ("■■☐☐☐", the filled squares colored by level, the empty ones dim), then "ctx 35% 353k".
 // The desktop slot is cut at a fixed width (about four squares beside the full text), whatever room is
 // free beside it: the bar's length is a setting.
-// Figures come from the last API response. Then the output style's first letter ("C" for Concise, "D" for
-// default): the slot has no room for its name. It is read from each composed system prompt.
+// Figures come from the last API response. Then, a setting, the output style's first letter ("C" for
+// Concise, "D" for default; the slot has no room for its name) or the window ("/1M").
 // The slot is drawn as a tree of our own: the desktop app ignores a rewritten `modes` list but draws a tree.
 //
 // Levels: green; yellow from half the window, where each turn (which resends it all) gets dear, or from
@@ -52,7 +52,7 @@ export function toConfig(options: PluginOptions): Config {
     redAt: toShare(options.red_at, 93),
     show: show === 'bar and text' ? 'both' : show,
     cells: toCells(options.bar_cells),
-    showStyle: options.show_style !== false,
+    end: ({ 'output style': 'style', 'window size': 'window', nothing: 'none' } as const)[pick(options.text_end, ['output style', 'window size', 'nothing'], 'output style')],
   }
 }
 
@@ -73,10 +73,15 @@ export const label = (c: Ctx) => `ctx ${c.percent}% ${fmtTokens(c.tokens)}`
 // "Concise" -> "C", "default" -> "D"
 export const styleTag = (style: string) => style.charAt(0).toUpperCase()
 
-// No window total: the desktop slot has no room for it (the app's context popover shows it).
-// The engine's own mode labels ("focus & memory paused") first, then ours, ending in the style's tag.
-export const footerText = (modes: readonly string[], c: Ctx, style: string | null = null) =>
-  [modes.join(' & '), label(c) + (style ? ` ${styleTag(style)}` : '')].filter(Boolean).join(' · ')
+// The desktop slot has room for one of the style's tag (" C") or the window ("/1M") after the label.
+export function tail(c: Ctx, end: Config['end'], style: string | null): string {
+  if (end === 'window') return `/${fmtTokens(c.window)}`
+  return end === 'style' && style ? ` ${styleTag(style)}` : ''
+}
+
+// The engine's own mode labels ("focus & memory paused") first, then ours.
+export const footerText = (modes: readonly string[], c: Ctx, end: Config['end'] = 'none', style: string | null = null) =>
+  [modes.join(' & '), label(c) + tail(c, end, style)].filter(Boolean).join(' · ')
 
 const clamp01 = (x: number) => Math.min(Math.max(x, 0), 1)
 
@@ -181,7 +186,7 @@ export const register: Register = (on, options) => {
     if (c === null) return next(e)
     const color = COLORS[levelOf(c, await read($, thresholdAtom), await read($, modelAtom), cfg)]
     const bar = barText(c, cfg.cells)
-    const style = cfg.showStyle ? await read($, styleAtom) : null
+    const style = cfg.end === 'style' ? await read($, styleAtom) : null
     const { Box, Text } = $.ui.resolve(e)
     // Text only, and short: the desktop footer drops an Svg, and cuts the slot at a fixed width
     return (
@@ -193,7 +198,7 @@ export const register: Register = (on, options) => {
             <Text dimColor>{bar.replace(/■/g, '')}</Text>
           </Text>
         )}
-        {cfg.show !== 'bar' && <Text key="text" dimColor mono>{`${cfg.show === 'both' ? ' ' : ''}${footerText(e.props.modes, c, style)}`}</Text>}
+        {cfg.show !== 'bar' && <Text key="text" dimColor mono>{`${cfg.show === 'both' ? ' ' : ''}${footerText(e.props.modes, c, cfg.end, style)}`}</Text>}
       </Box>
     )
   })

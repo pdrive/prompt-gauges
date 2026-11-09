@@ -52,8 +52,8 @@ The context window's fill, always visible in the prompt footer beside the model 
   | red    | 93% of the way to auto-compact (about 900k) | auto-compact is near, which can break a chat |
 
   Orange and red follow your session's auto-compact point (read from Claude Code, as `/context` shows it); with auto-compact off they follow the whole window.
-- **The text** is the percent and tokens used, as the app's own context popover shows them (the window total is left out, for room), updated after every response. A fresh or just-compacted session shows nothing until its first response.
-- **The output style** ends the text as its first letter (`C` for Concise, `D` for default), as the slot has no room for its name. A `/output-style` change shows from the next prompt on.
+- **The text** is the percent and tokens used, as the app's own context popover shows them, updated after every response. A fresh or just-compacted session shows nothing until its first response.
+- **The end of the text** is the output style's first letter (`C` for Concise, `D` for default) or the window size (`/1M`): the desktop slot has room for one (`text_end`). A `/output-style` change shows from the next prompt on.
 
 Settings, with `/config`. The thresholds take any whole number from 0 to 100, and 0 turns a level off:
 
@@ -64,7 +64,7 @@ Settings, with `/config`. The thresholds take any whole number from 0 to 100, an
 /config context-label.haiku_price_step=true # yellow at 100k on Haiku 5.5
 /config context-label.show=bar and text|bar|text
 /config context-label.bar_cells=5           # squares in the bar, 4 to 20
-/config context-label.show_style=true       # end the text with the output style's letter
+/config context-label.text_end=output style|window size|nothing
 ```
 
 The levels are checked from red down and the first that is reached wins, so they never overlap: a lower level set above a higher one simply never shows.

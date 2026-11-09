@@ -21,8 +21,10 @@ test('tokens read in k and M', () => {
 test('the label follows the engine modes', () => {
   expect(footerText([], c)).toBe('ctx 35% 353k')
   expect(footerText(['focus', 'memory paused'], c)).toBe('focus & memory paused · ctx 35% 353k')
-  expect(footerText([], c, 'Concise')).toBe('ctx 35% 353k C')
-  expect(footerText(['focus'], c, 'default')).toBe('focus · ctx 35% 353k D')
+  expect(footerText([], c, 'style', 'Concise')).toBe('ctx 35% 353k C')
+  expect(footerText(['focus'], c, 'style', 'default')).toBe('focus · ctx 35% 353k D')
+  expect(footerText([], c, 'style', null)).toBe('ctx 35% 353k')
+  expect(footerText([], c, 'window', 'Concise')).toBe('ctx 35% 353k/1M')
 })
 
 test('the bar fills a cell once the fill is halfway into it', () => {
@@ -54,7 +56,8 @@ test('levels by default: yellow at half the window (100k on Haiku), orange and r
 })
 
 test('settings take any whole percent from 0 to 100', () => {
-  expect(toConfig({ yellow_at: 40, orange_at: 75, red_at: '95', show: 'bar' })).toEqual({ yellowAt: 0.4, haikuStep: true, orangeAt: 0.75, redAt: 0.95, show: 'bar', cells: 5, showStyle: true })
+  expect(toConfig({ yellow_at: 40, orange_at: 75, red_at: '95', show: 'bar' })).toEqual({ yellowAt: 0.4, haikuStep: true, orangeAt: 0.75, redAt: 0.95, show: 'bar', cells: 5, end: 'style' })
+  expect([undefined, 'window size', 'nothing', 'other'].map((v) => toConfig({ text_end: v }).end)).toEqual(['style', 'window', 'none', 'style'])
   // 0 or "off" turns a level off; out of range or no number falls back to the default
   expect(toConfig({ orange_at: 0, red_at: 'off' })).toMatchObject({ orangeAt: null, redAt: null })
   expect(toConfig({ red_at: 150, orange_at: 'lots' })).toMatchObject({ redAt: 0.93, orangeAt: 0.72 })
@@ -111,12 +114,12 @@ test("the output style's first letter ends the text, from the composed prompt on
   expect(await text()).toMatchObject({ text: expect.stringMatching(/353k D$/) })
 })
 
-test('show_style: false leaves the style out', { options: { show_style: false } }, async ($, on) => {
+test('text_end: window size shows the window instead', { options: { text_end: 'window size' } }, async ($, on) => {
   on('session.measure', (_$, e) => ({ changed: e.changed }))
   on('prompt.compose', () => ({ sections: [] }))
   on('ui.render', ($e, e) => h($e.ui.resolve(e).Text, {}, 'engine') as never)
   await $.session.measure({ context: { tokens: 353_200, window: 1_000_000, percent: 35 }, rateLimits: [], changed: ['context'] })
   await $.prompt.compose(facts(CONCISE))
   const ui = await $.ui.mount({ plugin: 'context-label', surface: 'desktop', component: 'SessionMode', props: { modes: [] } })
-  expect(await ui.find({ type: 'Text', text: /353k C/ })).toBeUndefined()
+  expect(await ui.find({ type: 'Text', text: /353k\/1M$/ })).toBeDefined()
 })

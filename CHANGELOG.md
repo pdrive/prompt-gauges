@@ -5,8 +5,8 @@ Newest first. `claude plugin list` shows the version you have; `claude plugin up
 ## context-label
 
 ### 0.8.0
-- The text ends with the output style's first letter (`C` for Concise, `D` for default); `show_style` turns it off.
-- The window total is gone (`ctx 35% 353k`) and tokens drop the decimal from 10k up, to fit.
+- The text ends with the output style's first letter (`C` for Concise, `D` for default) instead of the window size; `text_end` picks either, or nothing. The desktop slot has room for one.
+- Tokens drop the decimal from 10k up, to fit.
 
 ### 0.7.0
 - A five-square bar instead of four; `bar_cells` sets it from 4 to 20 (the desktop footer cuts the slot at a fixed width, so a long bar clips the text).
