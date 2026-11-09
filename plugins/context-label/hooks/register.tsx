@@ -7,7 +7,8 @@ import type { Config, Ctx, Level } from '../types'
 // ("■■☐☐☐", the filled squares colored by level, the empty ones dim), then "ctx 35% 353k/1M".
 // The desktop slot is cut at a fixed width (about four squares beside the full text), whatever room is
 // free beside it: the bar's length is a setting.
-// Figures come from the last API response.
+// Figures come from the last API response. The output style follows ("Concise", or "default"), read from
+// each system prompt the engine composes, so a `/output-style` change shows from the next request on.
 // The slot is drawn as a tree of our own: the desktop app ignores a rewritten `modes` list but draws a tree.
 //
 // Levels: green; yellow from half the window, where each turn (which resends it all) gets dear, or from
@@ -18,6 +19,7 @@ import type { Config, Ctx, Level } from '../types'
 const ctxAtom = atom({ plugin: 'context-label', key: 'ctx' } as const, null)
 const thresholdAtom = atom({ plugin: 'context-label', key: 'threshold' } as const, null)
 const modelAtom = atom({ plugin: 'context-label', key: 'model' } as const, null)
+const styleAtom = atom({ plugin: 'context-label', key: 'style' } as const, null)
 
 const DEFAULT_CELLS = 5
 const HAIKU_YELLOW = 100_000
@@ -50,6 +52,7 @@ export function toConfig(options: PluginOptions): Config {
     redAt: toShare(options.red_at, 93),
     show: show === 'bar and text' ? 'both' : show,
     cells: toCells(options.bar_cells),
+    showStyle: options.show_style !== false,
   }
 }
 
@@ -67,8 +70,9 @@ export function fmtTokens(n: number): string {
 
 export const label = (c: Ctx) => `ctx ${c.percent}% ${fmtTokens(c.tokens)}/${fmtTokens(c.window)}`
 
-// The engine's own mode labels ("focus & memory paused") first, then ours.
-export const footerText = (modes: readonly string[], c: Ctx) => [modes.join(' & '), label(c)].filter(Boolean).join(' · ')
+// The engine's own mode labels ("focus & memory paused") first, then ours, then the output style.
+export const footerText = (modes: readonly string[], c: Ctx, style: string | null = null) =>
+  [modes.join(' & '), label(c), style].filter(Boolean).join(' · ')
 
 const clamp01 = (x: number) => Math.min(Math.max(x, 0), 1)
 
@@ -143,11 +147,21 @@ export const register: Register = (on, options) => {
     return next(e)
   })
 
+  on('prompt.compose', async ($, e, next) => {
+    // A teammate's render of its lead's prompt and a /context measure are not this session's requests
+    if (!e.traits.includes('teammate') && !e.traits.includes('analysis')) {
+      const style = e.outputStyle?.name ?? 'default'
+      if ((await read($, styleAtom)) !== style) await update($, styleAtom, () => style)
+    }
+    return next(e)
+  })
+
   on('ui.render', { component: 'SessionMode' }, async ($, e, next) => {
     const c = await read($, ctxAtom)
     if (c === null) return next(e)
     const color = COLORS[levelOf(c, await read($, thresholdAtom), await read($, modelAtom), cfg)]
     const bar = barText(c, cfg.cells)
+    const style = cfg.showStyle ? await read($, styleAtom) : null
     const { Box, Text } = $.ui.resolve(e)
     // Text only, and short: the desktop footer drops an Svg, and cuts the slot at a fixed width
     return (
@@ -159,7 +173,7 @@ export const register: Register = (on, options) => {
             <Text dimColor>{bar.replace(/■/g, '')}</Text>
           </Text>
         )}
-        {cfg.show !== 'bar' && <Text key="text" dimColor mono>{`${cfg.show === 'both' ? ' ' : ''}${footerText(e.props.modes, c)}`}</Text>}
+        {cfg.show !== 'bar' && <Text key="text" dimColor mono>{`${cfg.show === 'both' ? ' ' : ''}${footerText(e.props.modes, c, style)}`}</Text>}
       </Box>
     )
   })

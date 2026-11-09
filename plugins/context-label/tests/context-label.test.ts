@@ -1,9 +1,13 @@
+import type { PromptComposeInput } from 'claude-code'
 import { expect, mock, test } from 'claude-code/testing'
 
 import { barText, filledCells, fmtTokens, footerText, levelOf, toCells, toConfig } from '../hooks/register'
 
 const c = { tokens: 353_200, window: 1_000_000, percent: 35 }
 const at = (tokens: number) => ({ ...c, tokens })
+const facts = (outputStyle: PromptComposeInput['outputStyle'], traits: PromptComposeInput['traits'] = []): PromptComposeInput =>
+  ({ model: 'claude-opus-5-5', promptModel: 'claude-opus-5-5', surfaces: ['desktop'], tools: [], outputStyle, traits })
+const CONCISE = { name: 'Concise', isKeepingCodingInstructions: true }
 
 test('tokens read in k and M', () => {
   expect(fmtTokens(353_200)).toBe('353k')
@@ -15,6 +19,7 @@ test('tokens read in k and M', () => {
 test('the label follows the engine modes', () => {
   expect(footerText([], c)).toBe('ctx 35% 353k/1M')
   expect(footerText(['focus', 'memory paused'], c)).toBe('focus & memory paused · ctx 35% 353k/1M')
+  expect(footerText([], c, 'Concise')).toBe('ctx 35% 353k/1M · Concise')
 })
 
 test('the bar fills a cell once the fill is halfway into it', () => {
@@ -46,7 +51,7 @@ test('levels by default: yellow at half the window (100k on Haiku), orange and r
 })
 
 test('settings take any whole percent from 0 to 100', () => {
-  expect(toConfig({ yellow_at: 40, orange_at: 75, red_at: '95', show: 'bar' })).toEqual({ yellowAt: 0.4, haikuStep: true, orangeAt: 0.75, redAt: 0.95, show: 'bar', cells: 5 })
+  expect(toConfig({ yellow_at: 40, orange_at: 75, red_at: '95', show: 'bar' })).toEqual({ yellowAt: 0.4, haikuStep: true, orangeAt: 0.75, redAt: 0.95, show: 'bar', cells: 5, showStyle: true })
   // 0 or "off" turns a level off; out of range or no number falls back to the default
   expect(toConfig({ orange_at: 0, red_at: 'off' })).toMatchObject({ orangeAt: null, redAt: null })
   expect(toConfig({ red_at: 150, orange_at: 'lots' })).toMatchObject({ redAt: 0.93, orangeAt: 0.72 })
@@ -80,4 +85,35 @@ test('show: bar leaves the text out', { options: { show: 'bar' } }, async ($, on
   expect(await ui.find({ type: 'Text', text: /ctx/ })).toBeUndefined()
   expect(await ui.find({ type: 'Text', text: /■/ })).toBeDefined()
   await ui.unmount()
+})
+
+test('the output style ends the text, from the composed prompt on', async ($, on) => {
+  on('session.measure', (_$, e) => ({ changed: e.changed }))
+  on('prompt.compose', () => ({ sections: [] }))
+  on('ui.render', ($e, e) => h($e.ui.resolve(e).Text, {}, 'engine') as never)
+  await $.session.measure({ context: { tokens: 353_200, window: 1_000_000, percent: 35 }, rateLimits: [], changed: ['context'] })
+  const text = async () => {
+    const ui = await $.ui.mount({ plugin: 'context-label', surface: 'desktop', component: 'SessionMode', props: { modes: [] } })
+    const t = await ui.find({ type: 'Text', text: /ctx/ })
+    await ui.unmount()
+    return t
+  }
+  expect(await text()).toBeDefined()
+  await $.prompt.compose(facts(CONCISE))
+  expect(await text()).toMatchObject({ text: expect.stringMatching(/353k\/1M · Concise$/) })
+  // A /context measure does not count; the default style reads "default"
+  await $.prompt.compose(facts(null, ['analysis']))
+  expect(await text()).toMatchObject({ text: expect.stringMatching(/· Concise$/) })
+  await $.prompt.compose(facts(null))
+  expect(await text()).toMatchObject({ text: expect.stringMatching(/· default$/) })
+})
+
+test('show_style: false leaves the style out', { options: { show_style: false } }, async ($, on) => {
+  on('session.measure', (_$, e) => ({ changed: e.changed }))
+  on('prompt.compose', () => ({ sections: [] }))
+  on('ui.render', ($e, e) => h($e.ui.resolve(e).Text, {}, 'engine') as never)
+  await $.session.measure({ context: { tokens: 353_200, window: 1_000_000, percent: 35 }, rateLimits: [], changed: ['context'] })
+  await $.prompt.compose(facts(CONCISE))
+  const ui = await $.ui.mount({ plugin: 'context-label', surface: 'desktop', component: 'SessionMode', props: { modes: [] } })
+  expect(await ui.find({ type: 'Text', text: /Concise/ })).toBeUndefined()
 })

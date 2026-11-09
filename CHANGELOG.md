@@ -4,6 +4,9 @@ Newest first. `claude plugin list` shows the version you have; `claude plugin up
 
 ## context-label
 
+### 0.8.0
+- The text ends with the session's output style (`· Concise`, or `· default`); `show_style` turns it off.
+
 ### 0.7.0
 - A five-square bar instead of four; `bar_cells` sets it from 4 to 20 (the desktop footer cuts the slot at a fixed width, so a long bar clips the text).
 - The text drops its middle dot: `ctx 35% 353k/1M`, to fit.
